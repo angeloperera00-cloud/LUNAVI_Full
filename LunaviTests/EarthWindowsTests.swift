@@ -64,12 +64,14 @@ struct EarthWindowsTests {
     func windowEndsAfterPeriod() {
         let coverage = range("2026-11-20T00:00:00Z", "2026-11-22T00:00:00Z")
         let r = report(coverage: [coverage], earth: [range("2026-11-20T14:00:00Z", "2026-11-21T02:00:00Z")],
-                       period: range("2026-11-21T00:00:00Z", "2026-11-21T06:00:00Z"), reference: "2026-11-21T00:00:00Z")
+                       period: range("2026-11-20T12:00:00Z", "2026-11-21T00:00:00Z"), reference: "2026-11-20T12:00:00Z")
         #expect(r.windows.count == 1)
+        #expect(r.windows[0].range == range("2026-11-20T14:00:00Z", "2026-11-21T02:00:00Z"))
         #expect(r.windows[0].extendsAfterPeriod)
-        #expect(r.windows[0].extendsBeforePeriod)
-        #expect(r.visibleDurationInPeriod == 2 * 3600)
-        #expect(r.obstructedDurationInPeriod == 4 * 3600)
+        #expect(r.windows[0].extendsBeforePeriod == false)
+        #expect(r.windows[0].endBoundary == .transition)
+        #expect(r.visibleDurationInPeriod == 10 * 3600)
+        #expect(r.obstructedDurationInPeriod == 2 * 3600)
     }
 
     @Test("Gaps: missing data is its own segment, its edges are not transitions, and the next window is unknown")
