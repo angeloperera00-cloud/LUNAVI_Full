@@ -124,7 +124,10 @@ final class DemoFlowUITests: XCTestCase {
     @MainActor
     private func isClearOfFooter(_ element: XCUIElement) -> Bool {
         let app = XCUIApplication()
-        let footerButtons = ["action.simulateDelay", "action.findRecovery", "action.apply", "action.clearPreview", "action.acceptDelayed"]
+        let footerButtons = ["action.simulateDelay", "action.findRecovery", "action.apply", "action.clearPreview",
+                             "action.acceptDelayed", "action.compareAgain", "action.resetDemo"]
+        // Footer buttons themselves are always on screen; only inspector content can slide under them.
+        if footerButtons.contains(element.identifier) { return true }
         let centre = CGPoint(x: element.frame.midX, y: element.frame.midY)
         for id in footerButtons where id != element.identifier {
             let footer = app.buttons[id]
