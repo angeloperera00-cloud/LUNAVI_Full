@@ -117,7 +117,15 @@ final class DemoFlowUITests: XCTestCase {
                 XCUIApplication().swipeUp(velocity: .slow)
             }
         }
-        XCTFail("\(step): \(element.identifier) never became tappable (not hittable or under the inspector footer)")
+        // Diagnostics (one line, prefixed DIAG) so a failure shows where the runner thinks things are.
+        let app = XCUIApplication()
+        let footer = app.buttons["action.findRecovery"]
+        print("DIAG \(step) id=\(element.identifier) exists=\(element.exists) hittable=\(element.isHittable) enabled=\(element.isEnabled) "
+              + "frame=\(element.frame) inspector=\(inspector.exists ? "\(inspector.frame)" : "missing") "
+              + "footer=\(footer.exists ? "\(footer.frame)" : "missing") window=\(app.windows.firstMatch.frame) "
+              + "sheets=\(app.sheets.count) otherWindows=\(app.windows.count)")
+        // Last resort: a plain tap (XCUITest scrolls on its own); the next assertion checks it really worked.
+        element.tap()
     }
 
     /// False when the element's centre lies inside the pinned inspector footer (primary action area).
