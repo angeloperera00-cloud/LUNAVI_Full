@@ -4,6 +4,7 @@ import SwiftUI
 /// otherwise an explicit "Edit Plan…" asks before discarding the comparison.
 struct MissionParametersSection: View {
     @Environment(MissionStore.self) private var store
+    @Environment(AppContainer.self) private var container
     @Environment(AppNavigationState.self) private var navigation
     @State private var isEditingStart = false
 
@@ -67,8 +68,9 @@ struct MissionParametersSection: View {
         .buttonStyle(.plain)
         .disabled(!store.canEditParameters)
         .popover(isPresented: $isEditingStart) {
-            StartTimeEditor(initial: plan.start, allowedRange: store.allowedStartRange) { newValue in
-                _ = store.updateStart(newValue)
+            StartTimeEditor(initial: plan.start, allowedRange: container.selectableStartRange,
+                            rangesNote: container.computedRangesDescription) { newValue in
+                _ = container.setMissionStart(newValue)
             }
         }
         .accessibilityLabel("Landing time")
@@ -123,13 +125,15 @@ struct DurationSelector: View {
 struct StartTimeEditor: View {
     let initial: Date
     let allowedRange: ClosedRange<Date>?
+    var rangesNote: String? = nil
     let onCommit: (Date) -> Void
     @State private var draft: Date
     @Environment(\.dismiss) private var dismiss
 
-    init(initial: Date, allowedRange: ClosedRange<Date>? = nil, onCommit: @escaping (Date) -> Void) {
+    init(initial: Date, allowedRange: ClosedRange<Date>? = nil, rangesNote: String? = nil, onCommit: @escaping (Date) -> Void) {
         self.initial = initial
         self.allowedRange = allowedRange
+        self.rangesNote = rangesNote
         self.onCommit = onCommit
         _draft = State(initialValue: initial)
     }
@@ -166,7 +170,13 @@ struct StartTimeEditor: View {
             Text(UTCFormat.full(draft))
                 .font(LunaviTypography.measurement)
                 .foregroundStyle(LunaviColors.selectedTime)
-            if let allowedRange {
+            if let rangesNote {
+                Text(rangesNote)
+                    .font(LunaviTypography.caption)
+                    .foregroundStyle(LunaviColors.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("startEditor.ranges")
+            } else if let allowedRange {
                 Text("Computed data covers \(UTCFormat.full(allowedRange.lowerBound)) – \(UTCFormat.full(allowedRange.upperBound.addingTimeInterval(60))). Later dates need a new pipeline run.")
                     .font(LunaviTypography.caption)
                     .foregroundStyle(LunaviColors.textMuted)

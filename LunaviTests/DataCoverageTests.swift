@@ -63,4 +63,18 @@ struct DataCoverageTests {
         store.resetDemo()
         #expect(store.timelineFocus == nil)
     }
+
+    @Test("Choosing a start date: inside the data applies; with no computed data anywhere nothing changes and a notice explains")
+    func containerStartSelection() throws {
+        let container = AppContainer(configuration: AppConfiguration(arguments: ["-uiTesting"]))
+        container.missionStore.install(try DatasetRepository().loadDemoScenario())
+        let before = try #require(container.missionStore.committedPlan)
+        #expect(container.setMissionStart(TestTime.utc("2027-03-01T00:00:00Z")) == .noData)
+        #expect(container.missionStore.committedPlan == before)
+        #expect(container.missionStore.dataNotice?.contains("No computed data") == true)
+        #expect(container.setMissionStart(TestTime.utc("2026-11-21T00:00:00Z")) == .applied)
+        #expect(container.missionStore.committedPlan?.start == TestTime.utc("2026-11-21T00:00:00Z"))
+        // The simulated fixture never offers dates from computed files.
+        #expect(container.selectableStartRange == container.missionStore.allowedStartRange)
+    }
 }

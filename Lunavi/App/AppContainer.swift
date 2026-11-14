@@ -63,6 +63,67 @@ final class AppContainer {
         }
     }
 
+    // MARK: - Choosing dates across computed ranges
+
+    @ObservationIgnored private var cachedCatalog: [ScenarioCatalogEntry]?
+
+    /// Every computed date range bundled with the app (each one a separate pipeline run).
+    var catalog: [ScenarioCatalogEntry] {
+        if let cachedCatalog { return cachedCatalog }
+        let entries = ScenarioCatalog.entries()
+        cachedCatalog = entries
+        return entries
+    }
+
+    /// Start times the date editor offers: the span of all bundled computed ranges (real data only).
+    /// The simulated fixture keeps its own coverage so it is never mixed with computed files.
+    var selectableStartRange: ClosedRange<Date>? {
+        let current = missionStore.allowedStartRange
+        guard !missionStore.isSimulated, !catalog.isEmpty else { return current }
+        let starts = catalog.map(\.coverage.start) + [current?.lowerBound].compactMap { $0 }
+        let ends = catalog.map { $0.coverage.end.addingTimeInterval(-60) } + [current?.upperBound].compactMap { $0 }
+        guard let lower = starts.min(), let upper = ends.max(), upper > lower else { return current }
+        return lower...upper
+    }
+
+    /// One line per computed range, for the date editor.
+    var computedRangesDescription: String? {
+        guard !missionStore.isSimulated, catalog.count > 1 else { return nil }
+        let list = catalog.map { "\(UTCFormat.dayMonthYear($0.coverage.start)) – \(UTCFormat.dayMonthYear($0.coverage.end))" }
+        return "Computed ranges: " + list.joined(separator: "; ") + ". Dates between ranges have no data."
+    }
+
+    enum StartChange: Equatable {
+        case applied
+        case switchedDataset(String)
+        case noData
+    }
+
+    /// Sets the mission start. If the date lies in another bundled computed range, that dataset is loaded
+    /// first (site and duration are kept); if no computed data covers it, nothing changes and a notice says so.
+    @discardableResult
+    func setMissionStart(_ date: Date) -> StartChange {
+        if missionStore.updateStart(date) { return .applied }
+        let message = "No computed data for \(UTCFormat.full(date)). Add that period with ScienceService/scripts/build_real_data.sh --start … --end … (see docs/DATE_RANGES.md)."
+        guard !missionStore.isSimulated, missionStore.canEditParameters, let plan = missionStore.committedPlan,
+              let entry = catalog.first(where: { $0.metadataID != missionStore.metadata?.id
+                                                 && $0.coverage.start <= date && date < $0.coverage.end.addingTimeInterval(-59) }) else {
+            missionStore.showNotice(message)
+            return .noData
+        }
+        switchScenario(to: entry)
+        guard missionStore.metadata?.id == entry.metadataID else { return .noData }
+        if missionStore.site(id: plan.siteID) != nil {
+            missionStore.planMission(at: plan.siteID)
+        }
+        missionStore.updateDuration(plan.durationHours)
+        guard missionStore.updateStart(date) else {
+            missionStore.showNotice(message)
+            return .noData
+        }
+        return .switchedDataset(entry.resourceName)
+    }
+
     /// Reset Demo: mission state, map viewport and any open sheets.
     func resetAll() {
         missionStore.resetDemo()

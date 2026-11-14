@@ -1,0 +1,1123 @@
+{
+  "generatedAt": "2026-11-14T15:53:30Z",
+  "scenario": "ComputedScenario.json",
+  "period": {
+    "start": "2026-11-17T00:00:00Z",
+    "end": "2026-12-01T00:00:00Z",
+    "stepSeconds": 600.0,
+    "sampleCount": 2017
+  },
+  "kernels": [
+    "../kernels/naif0012.tls",
+    "../kernels/de421.bsp",
+    "../kernels/moon_pa_de421_1900-2050.bpc",
+    "../kernels/moon_080317.tf",
+    "../kernels/moon_assoc_me.tf"
+  ],
+  "layers": [
+    {
+      "name": "PGDA product 78 Site01 LDEM (5 m/pixel)",
+      "resolutionM": 5.0
+    },
+    {
+      "name": "PGDA product 78 Site04 LDEM (5 m/pixel)",
+      "resolutionM": 5.0
+    },
+    {
+      "name": "PGDA product 78 Site11 LDEM (5 m/pixel)",
+      "resolutionM": 5.0
+    },
+    {
+      "name": "PGDA product 90 LDEM_80S_20MPP_ADJ (20 m/pixel)",
+      "resolutionM": 80.0
+    }
+  ],
+  "observerHeightM": 2.0,
+  "azimuthStepDeg": 0.5,
+  "maxDistanceM": 150000.0,
+  "sites": [
+    {
+      "id": "pgda78-site01",
+      "name": "Connecting Ridge",
+      "latitude": -89.4527,
+      "longitude": -137.152253,
+      "coordinateSource": "centroid of the largest region '-11287.5' in Site01_ROIs.tgz (declared CRS), NASA GSFC PGDA product 78 (https://pgda.gsfc.nasa.gov/products/78)"
+    },
+    {
+      "id": "pgda78-site04",
+      "name": "Shackleton Rim",
+      "latitude": -89.762051,
+      "longitude": -157.074964,
+      "coordinateSource": "centroid of the largest region '-2812.5' in Site04_ROIs.tgz (declared CRS), NASA GSFC PGDA product 78 (https://pgda.gsfc.nasa.gov/products/78)"
+    },
+    {
+      "id": "pgda78-site11",
+      "name": "de Gerlache Rim",
+      "latitude": -88.668317,
+      "longitude": -68.375442,
+      "coordinateSource": "centroid of the largest region '-37542.5' in Site11_ROIs.tgz (declared CRS), NASA GSFC PGDA product 78 (https://pgda.gsfc.nasa.gov/products/78)"
+    }
+  ],
+  "horizon": {
+    "method": "ray-marching (app) vs all-cells wedge maximum (independent), compared beyond D0 = 2\u00b7cell/step",
+    "sites": {
+      "pgda78-site01": {
+        "surfaceHeightM": 1956.38,
+        "exportedVsRecomputedMaxAbsDeg": 5e-05,
+        "horizonSetBy": {
+          "<1146 m (not cross-checked)": 335,
+          "1146 m \u2013 4.6 km": 19,
+          "\u22654.6 km": 366,
+          "rays": 720
+        },
+        "nearFieldTile": {
+          "rays": 720,
+          "meanDiffDeg": 0.0237,
+          "medianDiffDeg": 0.0193,
+          "p95AbsDiffDeg": 0.0579,
+          "maxAbsDiffDeg": 0.1407,
+          "worstAzimuthDeg": 66.5,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 15,
+          "azimuthStepDeg": 0.5,
+          "fromDistanceM": 1146,
+          "layer": "PGDA product 78 Site01 LDEM (5 m/pixel)",
+          "cellM": 5.0
+        },
+        "allLayersFarField": {
+          "rays": 180,
+          "meanDiffDeg": 0.0953,
+          "medianDiffDeg": 0.0783,
+          "p95AbsDiffDeg": 0.2585,
+          "maxAbsDiffDeg": 0.3835,
+          "worstAzimuthDeg": 32.0,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 72,
+          "azimuthStepDeg": 2.0,
+          "fromDistanceM": 4584
+        }
+      },
+      "pgda78-site04": {
+        "surfaceHeightM": 1729.34,
+        "exportedVsRecomputedMaxAbsDeg": 5e-05,
+        "horizonSetBy": {
+          "<1146 m (not cross-checked)": 142,
+          "1146 m \u2013 4.6 km": 45,
+          "\u22654.6 km": 533,
+          "rays": 720
+        },
+        "nearFieldTile": {
+          "rays": 720,
+          "meanDiffDeg": 0.0611,
+          "medianDiffDeg": 0.04,
+          "p95AbsDiffDeg": 0.2096,
+          "maxAbsDiffDeg": 0.2907,
+          "worstAzimuthDeg": 211.0,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 125,
+          "azimuthStepDeg": 0.5,
+          "fromDistanceM": 1146,
+          "layer": "PGDA product 78 Site04 LDEM (5 m/pixel)",
+          "cellM": 5.0
+        },
+        "allLayersFarField": {
+          "rays": 180,
+          "meanDiffDeg": 0.097,
+          "medianDiffDeg": 0.0807,
+          "p95AbsDiffDeg": 0.2465,
+          "maxAbsDiffDeg": 0.359,
+          "worstAzimuthDeg": 44.0,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 78,
+          "azimuthStepDeg": 2.0,
+          "fromDistanceM": 4584
+        }
+      },
+      "pgda78-site11": {
+        "surfaceHeightM": 1814.19,
+        "exportedVsRecomputedMaxAbsDeg": 5e-05,
+        "horizonSetBy": {
+          "<1146 m (not cross-checked)": 257,
+          "1146 m \u2013 4.6 km": 4,
+          "\u22654.6 km": 459,
+          "rays": 720
+        },
+        "nearFieldTile": {
+          "rays": 720,
+          "meanDiffDeg": 0.0297,
+          "medianDiffDeg": 0.0227,
+          "p95AbsDiffDeg": 0.0797,
+          "maxAbsDiffDeg": 0.1363,
+          "worstAzimuthDeg": 53.0,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 18,
+          "azimuthStepDeg": 0.5,
+          "fromDistanceM": 1146,
+          "layer": "PGDA product 78 Site11 LDEM (5 m/pixel)",
+          "cellM": 5.0
+        },
+        "allLayersFarField": {
+          "rays": 180,
+          "meanDiffDeg": 0.0972,
+          "medianDiffDeg": 0.0718,
+          "p95AbsDiffDeg": 0.2691,
+          "maxAbsDiffDeg": 0.3912,
+          "worstAzimuthDeg": 302.0,
+          "rayAboveIndependentBy>0.05deg": 0,
+          "independentAboveRayBy>0.1deg": 71,
+          "azimuthStepDeg": 2.0,
+          "fromDistanceM": 4584
+        }
+      }
+    }
+  },
+  "pgda69": {
+    "reference": {
+      "sun": "https://pgda.gsfc.nasa.gov/data/MoonIllumination/AVGVISIB_85S_060M_201608.TIF",
+      "earth": "https://pgda.gsfc.nasa.gov/data/MoonIllumination/AVGVISIB_85S_060M_201608_EARTH.TIF",
+      "note": "PGDA 69: hourly samples over one 18.6-year nutation cycle, LOLA DEM, 60 m/px; observer height and exact epoch are not stated on the product page."
+    },
+    "sites": {
+      "pgda78-site01": {
+        "pgda69_sun": {
+          "centre": 0.6848,
+          "min3x3": 0.4536,
+          "max3x3": 0.8642,
+          "rawCentre": 0.6848,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "pgda69_earth": {
+          "centre": 0.575,
+          "min3x3": 0.5112,
+          "max3x3": 0.5817,
+          "rawCentre": 0.575,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "lunavi_h0m": {
+          "observerHeightM": 0.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.5388,
+            "fractionCentreAbove": 0.5382,
+            "fractionAnyPartAbove": 0.6026,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.5173,
+            "fractionCentreAbove": 0.5173,
+            "fractionAnyPartAbove": 0.563,
+            "unknownShare": 0.0
+          }
+        },
+        "lunavi_h2m": {
+          "observerHeightM": 2.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.8584,
+            "fractionCentreAbove": 0.8603,
+            "fractionAnyPartAbove": 0.9025,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.5368,
+            "fractionCentreAbove": 0.5367,
+            "fractionAnyPartAbove": 0.583,
+            "unknownShare": 0.0
+          }
+        }
+      },
+      "pgda78-site04": {
+        "pgda69_sun": {
+          "centre": 0.6624,
+          "min3x3": 0.2051,
+          "max3x3": 0.7603,
+          "rawCentre": 0.6624,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "pgda69_earth": {
+          "centre": 0.4522,
+          "min3x3": 0.0,
+          "max3x3": 0.5021,
+          "rawCentre": 0.4522,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "lunavi_h0m": {
+          "observerHeightM": 0.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.418,
+            "fractionCentreAbove": 0.4187,
+            "fractionAnyPartAbove": 0.4532,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.3554,
+            "fractionCentreAbove": 0.3559,
+            "fractionAnyPartAbove": 0.4047,
+            "unknownShare": 0.0
+          }
+        },
+        "lunavi_h2m": {
+          "observerHeightM": 2.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.8006,
+            "fractionCentreAbove": 0.8019,
+            "fractionAnyPartAbove": 0.8454,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.456,
+            "fractionCentreAbove": 0.456,
+            "fractionAnyPartAbove": 0.5017,
+            "unknownShare": 0.0
+          }
+        }
+      },
+      "pgda78-site11": {
+        "pgda69_sun": {
+          "centre": 0.7938,
+          "min3x3": 0.3832,
+          "max3x3": 0.7938,
+          "rawCentre": 0.7938,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "pgda69_earth": {
+          "centre": 0.614,
+          "min3x3": 0.4976,
+          "max3x3": 0.614,
+          "rawCentre": 0.614,
+          "scaleApplied": 4e-05,
+          "offsetApplied": 0.0,
+          "interpretedAsPercent": false,
+          "pixelM": 60.0
+        },
+        "lunavi_h0m": {
+          "observerHeightM": 0.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.545,
+            "fractionCentreAbove": 0.5494,
+            "fractionAnyPartAbove": 0.6188,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.4663,
+            "fractionCentreAbove": 0.4663,
+            "fractionAnyPartAbove": 0.5117,
+            "unknownShare": 0.0
+          }
+        },
+        "lunavi_h2m": {
+          "observerHeightM": 2.0,
+          "samples": 163047,
+          "start": "2017-01-01T00:00:00Z",
+          "years": 18.6,
+          "sun": {
+            "meanDiscFraction": 0.8274,
+            "fractionCentreAbove": 0.8287,
+            "fractionAnyPartAbove": 0.8585,
+            "unknownShare": 0.0
+          },
+          "earth": {
+            "meanDiscFraction": 0.5686,
+            "fractionCentreAbove": 0.5684,
+            "fractionAnyPartAbove": 0.6157,
+            "unknownShare": 0.0
+          }
+        }
+      }
+    }
+  },
+  "cases": {
+    "sites": {
+      "pgda78-site01": {
+        "latitude": -89.4527,
+        "longitude": -137.152253,
+        "surfaceHeightM": 1956.38,
+        "cases": [
+          {
+            "case": "Sun clearly visible",
+            "condition": "sunlight",
+            "utc": "2026-11-30T17:30:00Z",
+            "azimuthDeg": 60.5222,
+            "elevationDeg": 1.7411,
+            "angularRadiusDeg": 0.2701,
+            "horizonAppDeg": -2.6693,
+            "horizonIndependentDeg": -2.6441,
+            "clearanceAppDeg": 4.4104,
+            "clearanceIndependentDeg": 4.3852,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 1e-05,
+            "horizonSetAtDistanceM": 20381,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Sun closest to the criterion",
+            "condition": "sunlight",
+            "utc": "2026-11-20T13:20:00Z",
+            "azimuthDeg": 183.9994,
+            "elevationDeg": 0.9967,
+            "angularRadiusDeg": 0.2693,
+            "horizonAppDeg": -0.8715,
+            "horizonIndependentDeg": -1.7107,
+            "clearanceAppDeg": 1.8681,
+            "clearanceIndependentDeg": 2.7074,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 0.0,
+            "horizonSetAtDistanceM": 630,
+            "conclusion": "app consistent; horizon here is set 630 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Sun blocked",
+            "result": "no such instant in the computed period"
+          },
+          {
+            "case": "Earth clearly visible",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-23T18:30:00Z",
+            "azimuthDeg": 133.1925,
+            "elevationDeg": 5.8542,
+            "angularRadiusDeg": 1.0054,
+            "horizonAppDeg": -1.8985,
+            "horizonIndependentDeg": -1.8789,
+            "clearanceAppDeg": 7.7527,
+            "clearanceIndependentDeg": 7.7331,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 0.0,
+            "horizonSetAtDistanceM": 140790,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Earth closest to the criterion",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-30T20:40:00Z",
+            "azimuthDeg": 143.7559,
+            "elevationDeg": -1.8375,
+            "angularRadiusDeg": 0.9712,
+            "horizonAppDeg": -0.865,
+            "horizonIndependentDeg": -0.855,
+            "clearanceAppDeg": -0.9726,
+            "clearanceIndependentDeg": -0.9825,
+            "stateApp": "obstructed",
+            "stateIndependentHorizon": "obstructed",
+            "stateStoredIntervals": "obstructed",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 4e-05,
+            "horizonSetAtDistanceM": 134062,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Earth blocked",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-30T23:50:00Z",
+            "azimuthDeg": 143.8102,
+            "elevationDeg": -2.0415,
+            "angularRadiusDeg": 0.9695,
+            "horizonAppDeg": -0.8633,
+            "horizonIndependentDeg": -0.8546,
+            "clearanceAppDeg": -1.1781,
+            "clearanceIndependentDeg": -1.1868,
+            "stateApp": "obstructed",
+            "stateIndependentHorizon": "obstructed",
+            "stateStoredIntervals": "obstructed",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 4e-05,
+            "horizonSetAtDistanceM": 134062,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Missing data (1 h after the computed period)",
+            "utc": "2026-12-01T01:00:00Z",
+            "stateStoredIntervals": "unknown",
+            "conclusion": "unknown, as required"
+          }
+        ]
+      },
+      "pgda78-site04": {
+        "latitude": -89.762051,
+        "longitude": -157.074964,
+        "surfaceHeightM": 1729.34,
+        "cases": [
+          {
+            "case": "Sun clearly visible",
+            "condition": "sunlight",
+            "utc": "2026-11-18T09:50:00Z",
+            "azimuthDeg": 229.9973,
+            "elevationDeg": 1.3968,
+            "angularRadiusDeg": 0.2694,
+            "horizonAppDeg": -2.4059,
+            "horizonIndependentDeg": -2.3986,
+            "clearanceAppDeg": 3.8027,
+            "clearanceIndependentDeg": 3.7954,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": -0.0,
+            "horizonSetAtDistanceM": 107706,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Sun closest to the criterion",
+            "condition": "sunlight",
+            "utc": "2026-11-23T09:20:00Z",
+            "azimuthDeg": 169.5312,
+            "elevationDeg": 1.2946,
+            "angularRadiusDeg": 0.2692,
+            "horizonAppDeg": 0.7146,
+            "horizonIndependentDeg": -1.1631,
+            "clearanceAppDeg": 0.58,
+            "clearanceIndependentDeg": 2.4577,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 1e-05,
+            "horizonSetAtDistanceM": 570,
+            "conclusion": "app consistent; horizon here is set 570 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Sun blocked",
+            "result": "no such instant in the computed period"
+          },
+          {
+            "case": "Earth clearly visible",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-24T02:30:00Z",
+            "azimuthDeg": 153.6628,
+            "elevationDeg": 6.0398,
+            "angularRadiusDeg": 1.0085,
+            "horizonAppDeg": 0.4248,
+            "horizonIndependentDeg": -0.8748,
+            "clearanceAppDeg": 5.615,
+            "clearanceIndependentDeg": 6.9145,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 1e-05,
+            "horizonSetAtDistanceM": 510,
+            "conclusion": "app consistent; horizon here is set 510 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Earth closest to the criterion",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-30T03:20:00Z",
+            "azimuthDeg": 163.2702,
+            "elevationDeg": -0.4824,
+            "angularRadiusDeg": 0.9807,
+            "horizonAppDeg": 0.5006,
+            "horizonIndependentDeg": -0.8175,
+            "clearanceAppDeg": -0.9831,
+            "clearanceIndependentDeg": 0.3351,
+            "stateApp": "obstructed",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "obstructed",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 4e-05,
+            "horizonSetAtDistanceM": 630,
+            "conclusion": "app consistent; horizon here is set 630 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Earth blocked",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-30T23:50:00Z",
+            "azimuthDeg": 163.74,
+            "elevationDeg": -1.8282,
+            "angularRadiusDeg": 0.9695,
+            "horizonAppDeg": 0.4608,
+            "horizonIndependentDeg": -0.9458,
+            "clearanceAppDeg": -2.2889,
+            "clearanceIndependentDeg": -0.8824,
+            "stateApp": "obstructed",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "obstructed",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 4e-05,
+            "horizonSetAtDistanceM": 630,
+            "conclusion": "app consistent; horizon here is set 630 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Missing data (1 h after the computed period)",
+            "utc": "2026-12-01T01:00:00Z",
+            "stateStoredIntervals": "unknown",
+            "conclusion": "unknown, as required"
+          }
+        ]
+      },
+      "pgda78-site11": {
+        "latitude": -88.668317,
+        "longitude": -68.375442,
+        "surfaceHeightM": 1814.19,
+        "cases": [
+          {
+            "case": "Sun clearly visible",
+            "condition": "sunlight",
+            "utc": "2026-11-26T09:10:00Z",
+            "azimuthDeg": 44.5537,
+            "elevationDeg": 2.4551,
+            "angularRadiusDeg": 0.2694,
+            "horizonAppDeg": -2.411,
+            "horizonIndependentDeg": -2.4277,
+            "clearanceAppDeg": 4.8662,
+            "clearanceIndependentDeg": 4.8828,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 1e-05,
+            "horizonSetAtDistanceM": 180,
+            "conclusion": "app consistent; horizon here is set 180 m from the site (< 1146 m), inside the zone the independent method cannot resolve \u2014 not cross-checked"
+          },
+          {
+            "case": "Sun closest to the criterion",
+            "condition": "sunlight",
+            "utc": "2026-11-20T13:50:00Z",
+            "azimuthDeg": 114.997,
+            "elevationDeg": 0.9801,
+            "angularRadiusDeg": 0.2693,
+            "horizonAppDeg": -0.7483,
+            "horizonIndependentDeg": -0.7452,
+            "clearanceAppDeg": 1.7284,
+            "clearanceIndependentDeg": 1.7253,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 0.0,
+            "horizonSetAtDistanceM": 149138,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Sun blocked",
+            "result": "no such instant in the computed period"
+          },
+          {
+            "case": "Earth clearly visible",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-24T02:20:00Z",
+            "azimuthDeg": 65.0831,
+            "elevationDeg": 6.816,
+            "angularRadiusDeg": 1.0085,
+            "horizonAppDeg": -0.796,
+            "horizonIndependentDeg": -0.7766,
+            "clearanceAppDeg": 7.612,
+            "clearanceIndependentDeg": 7.5926,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 1e-05,
+            "horizonSetAtDistanceM": 86531,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Earth closest to the criterion",
+            "condition": "earthLineOfSight",
+            "utc": "2026-11-30T23:50:00Z",
+            "azimuthDeg": 75.0161,
+            "elevationDeg": -1.2558,
+            "angularRadiusDeg": 0.9695,
+            "horizonAppDeg": -1.4172,
+            "horizonIndependentDeg": -1.4119,
+            "clearanceAppDeg": 0.1614,
+            "clearanceIndependentDeg": 0.1561,
+            "stateApp": "visible",
+            "stateIndependentHorizon": "visible",
+            "stateStoredIntervals": "visible",
+            "horizonsDeltaAzDeg": -0.0,
+            "horizonsDeltaElDeg": 4e-05,
+            "horizonSetAtDistanceM": 114093,
+            "conclusion": "agree"
+          },
+          {
+            "case": "Earth blocked",
+            "result": "no such instant in the computed period"
+          },
+          {
+            "case": "Missing data (1 h after the computed period)",
+            "utc": "2026-12-01T01:00:00Z",
+            "stateStoredIntervals": "unknown",
+            "conclusion": "unknown, as required"
+          }
+        ]
+      }
+    }
+  },
+  "decisions": {
+    "scenarios": {
+      "A": {
+        "site": "pgda78-site01",
+        "start": "2026-11-29T15:00:00Z",
+        "hours": 24,
+        "app": {
+          "overall": "met",
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          }
+        },
+        "independent60s": {
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "overall": "met"
+        },
+        "statusAgrees": true,
+        "firstObstructionDiffS (independent \u2212 app, 60 s grid)": {
+          "sunlight": null,
+          "earthLineOfSight": null
+        }
+      },
+      "B": {
+        "site": "pgda78-site04",
+        "start": "2026-11-29T15:00:00Z",
+        "hours": 6,
+        "app": {
+          "overall": "met",
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          }
+        },
+        "independent60s": {
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "overall": "met"
+        },
+        "statusAgrees": true,
+        "firstObstructionDiffS (independent \u2212 app, 60 s grid)": {
+          "sunlight": null,
+          "earthLineOfSight": null
+        }
+      },
+      "C": {
+        "site": "pgda78-site01",
+        "start": "2026-11-29T15:00:00Z",
+        "hours": 48,
+        "app": {
+          "overall": "notMet",
+          "sunlight": {
+            "status": "unknown",
+            "firstObstruction": null,
+            "unknownH": 15.0,
+            "obstructedH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:38:45Z",
+            "unknownH": 15.0,
+            "obstructedH": 3.354
+          }
+        },
+        "independent60s": {
+          "sunlight": {
+            "status": "unknown",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 15.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:39:00Z",
+            "obstructedH": 3.35,
+            "unknownH": 15.0
+          },
+          "overall": "notMet"
+        },
+        "statusAgrees": true,
+        "firstObstructionDiffS (independent \u2212 app, 60 s grid)": {
+          "sunlight": null,
+          "earthLineOfSight": 15.0
+        }
+      },
+      "A+delay": {
+        "site": "pgda78-site01",
+        "start": "2026-11-29T21:00:00Z",
+        "hours": 24,
+        "app": {
+          "overall": "notMet",
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:38:45Z",
+            "unknownH": 0.0,
+            "obstructedH": 0.354
+          }
+        },
+        "independent60s": {
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:39:00Z",
+            "obstructedH": 0.35,
+            "unknownH": 0.0
+          },
+          "overall": "notMet"
+        },
+        "statusAgrees": true,
+        "firstObstructionDiffS (independent \u2212 app, 60 s grid)": {
+          "sunlight": null,
+          "earthLineOfSight": 15.0
+        }
+      },
+      "D": {
+        "site": "pgda78-site01",
+        "start": "2026-11-30T17:38:45Z",
+        "hours": 6,
+        "app": {
+          "overall": "notMet",
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "unknownH": 0.0,
+            "obstructedH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:38:45Z",
+            "unknownH": 0.0,
+            "obstructedH": 3.0
+          }
+        },
+        "independent60s": {
+          "sunlight": {
+            "status": "met",
+            "firstObstruction": null,
+            "obstructedH": 0.0,
+            "unknownH": 0.0
+          },
+          "earthLineOfSight": {
+            "status": "partial",
+            "firstObstruction": "2026-11-30T20:38:45Z",
+            "obstructedH": 3.0,
+            "unknownH": 0.0
+          },
+          "overall": "notMet"
+        },
+        "statusAgrees": true,
+        "firstObstructionDiffS (independent \u2212 app, 60 s grid)": {
+          "sunlight": null,
+          "earthLineOfSight": 0.0
+        }
+      }
+    },
+    "D_source": "first earthLineOfSight obstruction in the data"
+  },
+  "rescue": {
+    "delayedStart": "2026-11-29T21:00:00Z",
+    "hours": 24,
+    "proximityOrder": [
+      "pgda78-site04",
+      "pgda78-site11"
+    ],
+    "optionA": null,
+    "bruteForceEarliestSameSite (1-min steps)": null,
+    "optionA_matchesBruteForce": true,
+    "optionB": "pgda78-site11",
+    "allQualifyingSitesAtDelayedStart (nearest first)": [
+      "pgda78-site11"
+    ],
+    "optionB_isNearestQualifying": true,
+    "optionsReEvaluated": {
+      "alternativeSite": "met"
+    },
+    "durationPreserved": true
+  },
+  "sensitivity": {
+    "baseline": {
+      "A": "met",
+      "B": "met",
+      "C": "notMet",
+      "A+delay": "notMet"
+    },
+    "variants": {
+      "observer 1 m": {
+        "maxTransitionShiftMin": 359.7,
+        "medianTransitionShiftMin": 109.4,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site04",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T03:17:49Z",
+          "variant": "2026-11-29T21:18:08Z",
+          "shiftMin": -359.7
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "observer 5 m": {
+        "maxTransitionShiftMin": 323.8,
+        "medianTransitionShiftMin": 257.2,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site04",
+          "condition": "earth",
+          "kind": "returns",
+          "baseline": "2026-11-17T08:52:30Z",
+          "variant": "2026-11-17T03:28:45Z",
+          "shiftMin": -323.8
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "observer 10 m": {
+        "maxTransitionShiftMin": 684.4,
+        "medianTransitionShiftMin": 343.8,
+        "transitionsWithoutCounterpart": 1,
+        "largestShift": {
+          "site": "pgda78-site04",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T03:17:49Z",
+          "variant": "2026-11-30T14:42:12Z",
+          "shiftMin": 684.4
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "azimuth step 0.25\u00b0": {
+        "maxTransitionShiftMin": 8.4,
+        "medianTransitionShiftMin": 3.4,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site01",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T20:38:45Z",
+          "variant": "2026-11-30T20:30:19Z",
+          "shiftMin": -8.4
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "azimuth step 1\u00b0": {
+        "maxTransitionShiftMin": 11.9,
+        "medianTransitionShiftMin": 8.4,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site01",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T20:38:45Z",
+          "variant": "2026-11-30T20:50:38Z",
+          "shiftMin": 11.9
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "search radius 100 km": {
+        "maxTransitionShiftMin": 0.0,
+        "medianTransitionShiftMin": 0.0,
+        "transitionsWithoutCounterpart": 1,
+        "largestShift": {
+          "site": "pgda78-site04",
+          "condition": "earth",
+          "kind": "returns",
+          "baseline": "2026-11-17T08:52:30Z",
+          "variant": "2026-11-17T08:52:30Z",
+          "shiftMin": 0.0
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "unknown",
+          "A+delay": "met"
+        },
+        "statusChanges": {
+          "C": "notMet \u2192 unknown",
+          "A+delay": "notMet \u2192 met"
+        }
+      },
+      "search radius 250 km": {
+        "error": "Read failed. See previous exception for details."
+      },
+      "sampling 300 s": {
+        "maxTransitionShiftMin": 0.0,
+        "medianTransitionShiftMin": 0.0,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site01",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T20:38:45Z",
+          "variant": "2026-11-30T20:38:45Z",
+          "shiftMin": 0.0
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "Sun: any part of disc": {
+        "maxTransitionShiftMin": 0.0,
+        "medianTransitionShiftMin": 0.0,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site01",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T20:38:45Z",
+          "variant": "2026-11-30T20:38:45Z",
+          "shiftMin": 0.0
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "Sun: whole disc": {
+        "maxTransitionShiftMin": 0.0,
+        "medianTransitionShiftMin": 0.0,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site01",
+          "condition": "earth",
+          "kind": "obstructed",
+          "baseline": "2026-11-30T20:38:45Z",
+          "variant": "2026-11-30T20:38:45Z",
+          "shiftMin": 0.0
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      },
+      "clearance +0.1\u00b0": {
+        "maxTransitionShiftMin": 95.3,
+        "medianTransitionShiftMin": 93.8,
+        "transitionsWithoutCounterpart": 0,
+        "largestShift": {
+          "site": "pgda78-site04",
+          "condition": "earth",
+          "kind": "returns",
+          "baseline": "2026-11-17T08:52:30Z",
+          "variant": "2026-11-17T10:27:49Z",
+          "shiftMin": 95.3
+        },
+        "scenarioStatus": {
+          "A": "met",
+          "B": "met",
+          "C": "notMet",
+          "A+delay": "notMet"
+        },
+        "statusChanges": {}
+      }
+    }
+  }
+}
