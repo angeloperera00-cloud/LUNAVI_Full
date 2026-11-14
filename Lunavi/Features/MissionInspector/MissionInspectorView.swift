@@ -25,6 +25,8 @@ struct MissionInspectorView: View {
                     .buttonStyle(LunaviSecondaryButtonStyle())
                     .accessibilityIdentifier("action.compareSites")
                     phaseContent
+                    AnalysisToolsSection()
+                    LandingTerrainView(siteID: store.focusSiteID)
                 }
                 .padding(.horizontal, LunaviSpacing.l + 2)
                 .padding(.vertical, LunaviSpacing.l)
@@ -48,6 +50,38 @@ struct MissionInspectorView: View {
             MissionRescueSection()
         case .recoveryApplied:
             AppliedPlanSection()
+        }
+    }
+}
+
+/// Secondary analyses for the plan in focus. Each opens its own panel; none changes the plan.
+struct AnalysisToolsSection: View {
+    @Environment(AppNavigationState.self) private var navigation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: LunaviSpacing.s) {
+            Text("Analysis").lunaviSectionLabel()
+            Button {
+                navigation.present(\.isEarthWindowsPresented)
+            } label: {
+                Label("View Earth Visibility Windows", systemImage: "globe.europe.africa")
+            }
+            .buttonStyle(LunaviSecondaryButtonStyle())
+            .accessibilityIdentifier("action.earthWindows")
+            Button {
+                navigation.present(\.isSolarPowerPresented)
+            } label: {
+                Label("Experimental Solar Power Estimate", systemImage: "bolt")
+            }
+            .buttonStyle(LunaviSecondaryButtonStyle())
+            .accessibilityIdentifier("action.solarPower")
+            Button {
+                navigation.present(\.isReportPresented)
+            } label: {
+                Label("Mission Report (PDF)", systemImage: "doc.richtext")
+            }
+            .buttonStyle(LunaviSecondaryButtonStyle())
+            .accessibilityIdentifier("action.report")
         }
     }
 }

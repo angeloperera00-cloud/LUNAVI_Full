@@ -53,6 +53,9 @@ final class MissionStore {
     private(set) var confirmationMessage: String?
     private(set) var dataNotice: String?
     private(set) var timelineCursor: Date?
+    /// Range the timeline shows while a user-selected interval (e.g. an Earth visibility window) is focused.
+    /// Display only: it never changes mission data.
+    private(set) var timelineFocus: UTCRange?
     private(set) var failureFeedbackCount = 0
     private(set) var successFeedbackCount = 0
 
@@ -78,6 +81,11 @@ final class MissionStore {
         } catch {
             loadState = .failed(error.localizedDescription)
         }
+    }
+
+    /// Replaces the data notice without touching the scenario or the plan.
+    func showNotice(_ text: String?) {
+        dataNotice = text
     }
 
     func install(_ scenario: ScenarioBundle, notice: String? = nil) {
@@ -114,6 +122,16 @@ final class MissionStore {
         guard let siteID else { return nil }
         return scenario?.geometry[siteID]
     }
+
+    /// Terrain characteristics exported by the pipeline (schema 3), if any.
+    func terrain(for siteID: String?) -> TerrainCharacteristics? {
+        guard let siteID else { return nil }
+        return scenario?.terrain[siteID]
+    }
+
+    /// Span of computed data over all sites. Plans are only edited to start inside it.
+    var dataCoverage: UTCRange? { scenario?.coverageHull }
+    var allowedStartRange: ClosedRange<Date>? { scenario?.allowedStartRange }
 
     func hasData(siteID: String) -> Bool {
         scenario?.visibility[siteID] != nil
@@ -414,14 +432,21 @@ final class MissionStore {
         confirmationMessage = nil
         phase = .original
         timelineCursor = plan.start
+        timelineFocus = nil
     }
 
     // MARK: - Editing (original phase only)
 
-    func updateStart(_ date: Date) {
-        guard canEditParameters, var plan = committedPlan else { return }
-        plan.start = Self.floorToMinute(date)
+    /// Changes the start time. A start outside the computed coverage is refused, so the app never
+    /// evaluates a plan in a period where no scientific data was generated.
+    @discardableResult
+    func updateStart(_ date: Date) -> Bool {
+        guard canEditParameters, var plan = committedPlan else { return false }
+        let start = Self.floorToMinute(date)
+        if let allowed = allowedStartRange, !allowed.contains(start) { return false }
+        plan.start = start
         commitEdited(plan)
+        return true
     }
 
     func updateDuration(_ hours: Int) {
@@ -494,6 +519,17 @@ final class MissionStore {
         } else if let previous = times.last(where: { $0 < current.addingTimeInterval(-1) }) {
             timelineCursor = previous
         }
+    }
+
+    /// Focuses the timeline on `range` and moves the cursor to `cursor` (default: the range start).
+    func focusTimeline(on range: UTCRange, cursor: Date? = nil) {
+        guard !range.isEmpty else { return }
+        timelineFocus = range
+        timelineCursor = cursor ?? range.start
+    }
+
+    func clearTimelineFocus() {
+        timelineFocus = nil
     }
 
     func jumpToFirstFailure() {

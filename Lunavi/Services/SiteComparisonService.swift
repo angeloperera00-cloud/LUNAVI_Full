@@ -16,6 +16,35 @@ struct SiteComparisonRow: Identifiable, Hashable, Sendable {
 
     var id: String { siteID }
     var hasData: Bool { evaluation.hasSiteData }
+
+    /// Uninterrupted visibility measured from the window start (never longer than the window).
+    func continuousFromStart(_ condition: VisibilityCondition) -> TimeInterval {
+        let assessment = evaluation.assessment(for: condition)
+        return min(assessment.validFromStart, assessment.window.duration)
+    }
+}
+
+/// Whether a compared site can be committed to the mission plan from the comparison screen.
+/// Committing goes through `MissionStore.planMission(at:)`, so it is only possible while the plan is
+/// editable; during a delay comparison or Mission Rescue the rescue flow owns the commit.
+enum ComparisonCommitAvailability: Equatable, Sendable {
+    case available
+    case alreadyPlanSite
+    case lockedByMissionPhase
+    case noData
+
+    var reason: String? {
+        switch self {
+        case .available:
+            return nil
+        case .alreadyPlanSite:
+            return "This is already the plan site."
+        case .lockedByMissionPhase:
+            return "The plan is locked while a delay comparison or Mission Rescue is open. Use Mission Rescue to apply an option, or choose Edit Plan first."
+        case .noData:
+            return "No computed data for this site — it cannot be planned from the comparison."
+        }
+    }
 }
 
 enum SiteComparisonService {
@@ -38,6 +67,12 @@ enum SiteComparisonService {
                 lowestEarthClearanceDeg: ShadowAnalysisService.minimumClearance(.earthLineOfSight, over: plan.window, geometry: geometry[site.id])
             )
         }
+    }
+
+    static func commitAvailability(for row: SiteComparisonRow, planSiteID: String?, canEditPlan: Bool) -> ComparisonCommitAvailability {
+        if row.siteID == planSiteID { return .alreadyPlanSite }
+        if !row.hasData { return .noData }
+        return canEditPlan ? .available : .lockedByMissionPhase
     }
 
     /// Visible, obstructed and unknown pieces of the window for one condition, in time order.

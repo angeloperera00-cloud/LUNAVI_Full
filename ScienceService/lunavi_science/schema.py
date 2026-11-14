@@ -140,4 +140,35 @@ def validate_scenario(s: dict) -> list[str]:
                 values = need(track, key, list, f"{where}.samples.{target}") or []
                 if len(values) != count:
                     errors.append(f"{where}.samples.{target}.{key}: expected {count} values, got {len(values)}")
+
+    period = s.get("period")
+    if period is not None:
+        a, b = date(period, "start", "period"), date(period, "end", "period")
+        if a and b and b <= a:
+            errors.append("period: end must be after start")
+        if "stepSeconds" in period:
+            need(period, "stepSeconds", (int, float), "period")
+        if "sampleCount" in period:
+            need(period, "sampleCount", int, "period")
+
+    for i, t in enumerate(s.get("terrain") or []):
+        where = f"terrain[{i}]"
+        if need(t, "siteID", str, where) not in site_ids:
+            errors.append(f"{where}.siteID: unknown site")
+        available = need(t, "available", bool, where)
+        need(t, "radiusM", (int, float), where)
+        need(t, "limitations", list, where)
+        if available:
+            for key in ("elevationM", "slopeDeg", "slopeUncertaintyDeg", "roughnessM", "reliefM", "resolutionM"):
+                need(t, key, (int, float), where)
+            need(t, "sampleCount", int, where)
+            need(t, "source", str, where)
+            slope = t.get("slopeDeg")
+            if isinstance(slope, (int, float)) and not 0 <= slope <= 90:
+                errors.append(f"{where}.slopeDeg: must be within 0–90°")
+            rough = t.get("roughnessM")
+            if isinstance(rough, (int, float)) and rough < 0:
+                errors.append(f"{where}.roughnessM: must not be negative")
+        elif available is False:
+            need(t, "reason", str, where)
     return errors

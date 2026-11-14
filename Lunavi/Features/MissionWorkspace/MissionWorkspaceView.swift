@@ -36,6 +36,18 @@ struct MissionWorkspaceView: View {
         .sheet(isPresented: $navigation.isSiteComparisonPresented) {
             SiteComparisonView()
         }
+        .sheet(isPresented: $navigation.isEarthWindowsPresented) {
+            EarthCommunicationWindowsView()
+        }
+        .sheet(isPresented: $navigation.isReportPresented) {
+            MissionReportView()
+        }
+        .sheet(isPresented: $navigation.isSolarPowerPresented) {
+            SolarPowerAnalysisView()
+        }
+        .fullScreenCover(isPresented: $navigation.isTutorialPresented) {
+            LunaviTutorialView()
+        }
         .sheet(isPresented: $navigation.isCompactInspectorPresented) {
             MissionInspectorView()
                 .presentationDetents([.medium, .large])

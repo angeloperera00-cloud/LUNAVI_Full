@@ -3,6 +3,22 @@
 #
 #   cd ScienceService && sh scripts/build_real_data.sh
 #
+# Another date range (kept alongside the existing one; the app lists both in Data & Method):
+#
+#   sh scripts/build_real_data.sh --start 2026-12-01T00:00:00Z --end 2026-12-15T00:00:00Z
+#
+# Options:
+#   --start ISO --end ISO   computation period (UTC). Without them, period in config/sites.json is used.
+#   --step SECONDS          sample spacing (default: config, normally 600)
+#   --name NAME             output name (must start with ComputedScenario). Default: ComputedScenario,
+#                           or ComputedScenario_YYYYMMDD_YYYYMMDD when --start/--end are given.
+#   --regenerate-config     rewrite config/sites.json from the template (otherwise an existing one is kept,
+#                           so periods or settings you edited there are never overwritten)
+#   --download-far-field    download the 2.6 GB regional DEM instead of streaming it
+#
+# The period is checked against every SPICE kernel and the DEM before anything is computed;
+# unsupported dates stop the build with an explanation. See docs/DATE_RANGES.md.
+#
 # 1. Python environment   2. NAIF SPICE kernels (~19 MB)
 # 3. PGDA product 78 site tiles + region shapefiles (Site01, Site04, Site11)
 # 4. Site coordinates from those NASA shapefiles -> config/sites.json
@@ -14,12 +30,33 @@ cd "$(dirname "$0")/.."
 
 FAR_FIELD="/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF"
 SITES="Site01 Site04 Site11"
-for arg in "$@"; do
-    case "$arg" in
+START=""; END=""; STEP=""; NAME=""; REGENERATE=0
+while [ $# -gt 0 ]; do
+    case "$1" in
         --download-far-field) FAR_FIELD="data/LDEM_80S_20MPP_ADJ.TIF" ;;
-        *) echo "unknown option: $arg"; exit 2 ;;
+        --start) START="$2"; shift ;;
+        --end) END="$2"; shift ;;
+        --step) STEP="$2"; shift ;;
+        --name) NAME="$2"; shift ;;
+        --regenerate-config) REGENERATE=1 ;;
+        *) echo "unknown option: $1"; exit 2 ;;
     esac
+    shift
 done
+if { [ -n "$START" ] && [ -z "$END" ]; } || { [ -z "$START" ] && [ -n "$END" ]; }; then
+    echo "Give both --start and --end (UTC, e.g. 2026-12-01T00:00:00Z)."; exit 2
+fi
+if [ -z "$NAME" ]; then
+    if [ -n "$START" ]; then
+        NAME="ComputedScenario_$(echo "$START" | cut -c1-10 | tr -d '-')_$(echo "$END" | cut -c1-10 | tr -d '-')"
+    else
+        NAME="ComputedScenario"
+    fi
+fi
+case "$NAME" in
+    ComputedScenario*) ;;
+    *) echo "--name must start with ComputedScenario"; exit 2 ;;
+esac
 
 # 1. Python 3.10+
 PY=""
@@ -60,18 +97,31 @@ export CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".TIF,.tif"
 export GDAL_HTTP_MULTIRANGE=YES
 export GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
 
-# 4. Coordinates from the NASA region shapefiles
-python -m lunavi_science make-config --data data --out config/sites.json --far-field "$FAR_FIELD" --sites $SITES
+# 4. Coordinates from the NASA region shapefiles (an existing config/sites.json is kept)
+if [ ! -f config/sites.json ] || [ "$REGENERATE" = 1 ]; then
+    python -m lunavi_science make-config --data data --out config/sites.json --far-field "$FAR_FIELD" --sites $SITES
+else
+    echo "Keeping existing config/sites.json (use --regenerate-config to rebuild it from the template)."
+fi
 
-# 5. Build
-python -m lunavi_science build --config config/sites.json --out out
+# 5. Check the period against the kernels, then build
+PERIOD_ARGS=""
+[ -n "$START" ] && PERIOD_ARGS="--start $START --end $END"
+[ -n "$STEP" ] && PERIOD_ARGS="$PERIOD_ARGS --step $STEP"
+# shellcheck disable=SC2086
+python -m lunavi_science check-coverage --config config/sites.json ${START:+--start $START --end $END} >/dev/null || {
+    python -m lunavi_science check-coverage --config config/sites.json ${START:+--start $START --end $END}
+    echo "The requested period is not covered by the SPICE kernels; nothing was computed."; exit 1; }
+# shellcheck disable=SC2086
+python -m lunavi_science build --config config/sites.json --out out --name "$NAME" $PERIOD_ARGS
 
 # 6. Ephemeris check against JPL Horizons (does not stop the script if it fails)
-if ! python -m lunavi_science horizons-check --scenario out/ComputedScenario.json --kernels kernels/*; then
+if ! python -m lunavi_science horizons-check --scenario "out/$NAME.json" --kernels kernels/*; then
     echo "Note: the Horizons check did not pass or could not run; the scenario stays marked 'not validated'."
 fi
 
-# 7. Install into the app
-cp out/ComputedScenario.json out/computed_south_pole_basemap.jpg ../Lunavi/Resources/
+# 7. Install into the app (other ComputedScenario*.json files already there are kept)
+cp "out/$NAME.json" out/computed_south_pole_basemap.jpg ../Lunavi/Resources/
 echo
-echo "Done. Real computed data installed in Lunavi/Resources/. Rebuild the app in Xcode (Product > Clean Build Folder, then Run)."
+echo "Done. Installed Lunavi/Resources/$NAME.json. Rebuild the app in Xcode (Product > Clean Build Folder, then Run)."
+echo "Bundled computed ranges:"; ls ../Lunavi/Resources/ComputedScenario*.json

@@ -29,6 +29,7 @@ final class AppContainer {
             do {
                 let scenario = try await RemoteScienceService(baseURL: url).loadScenario()
                 missionStore.install(scenario, notice: "Connected to the LUNAVI science service at \(url.absoluteString).")
+                presentTutorialIfFirstLaunch()
                 return
             } catch {
                 notice = "Science service unavailable (\(error.localizedDescription)) — using bundled data."
@@ -39,6 +40,26 @@ final class AppContainer {
             missionStore.install(scenario, notice: notice)
         } catch {
             missionStore.failLoading(error.localizedDescription)
+        }
+        presentTutorialIfFirstLaunch()
+    }
+
+    /// Opens the beginner tutorial once, on first launch. Completion is stored locally.
+    func presentTutorialIfFirstLaunch(progress: TutorialProgress = TutorialProgress()) {
+        guard configuration.opensTutorialOnFirstLaunch, !progress.isCompleted else { return }
+        navigation.isTutorialPresented = true
+    }
+
+    /// Switches the session to another bundled computed scenario (a different generated date range).
+    /// The mission is reset to that scenario's defaults; data from two scenarios is never mixed.
+    func switchScenario(to entry: ScenarioCatalogEntry) {
+        do {
+            let scenario = try DatasetRepository().loadComputedScenario(resource: entry.resourceName)
+            missionStore.install(scenario, notice: "Using computed data for \(UTCFormat.dayMonthYear(entry.coverage.start)) – \(UTCFormat.dayMonthYear(entry.coverage.end)).")
+            mapState.reset()
+        } catch {
+            // Keep the current scenario; just report the failure.
+            missionStore.showNotice("Could not load \(entry.resourceName): \(error.localizedDescription)")
         }
     }
 

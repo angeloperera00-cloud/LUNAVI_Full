@@ -12,6 +12,10 @@ final class AppNavigationState {
     var isEditConfirmationPresented = false
     var isShadowAnalysisPresented = false
     var isSiteComparisonPresented = false
+    var isEarthWindowsPresented = false
+    var isTutorialPresented = false
+    var isReportPresented = false
+    var isSolarPowerPresented = false
 
     func dismissAll() {
         isDataAndMethodPresented = false
@@ -21,6 +25,33 @@ final class AppNavigationState {
         isEditConfirmationPresented = false
         isShadowAnalysisPresented = false
         isSiteComparisonPresented = false
+        isEarthWindowsPresented = false
+        isTutorialPresented = false
+        isReportPresented = false
+        isSolarPowerPresented = false
+    }
+
+    /// Presents the sheet behind `flag`, first closing the compact inspector sheet if it is showing
+    /// (one view cannot present two sheets at once).
+    func present(_ flag: ReferenceWritableKeyPath<AppNavigationState, Bool>) {
+        guard isCompactInspectorPresented else {
+            self[keyPath: flag] = true
+            return
+        }
+        isCompactInspectorPresented = false
+        pendingSheet = flag
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(450))
+            self?.presentPendingSheet()
+        }
+    }
+
+    @ObservationIgnored private var pendingSheet: ReferenceWritableKeyPath<AppNavigationState, Bool>?
+
+    private func presentPendingSheet() {
+        guard let flag = pendingSheet else { return }
+        pendingSheet = nil
+        self[keyPath: flag] = true
     }
 
     /// Shows the edit-plan confirmation once a sheet has finished dismissing.
@@ -34,15 +65,7 @@ final class AppNavigationState {
     /// Opens Site Comparison, first closing the compact inspector sheet if it is showing
     /// (one view cannot present two sheets at once).
     func presentSiteComparison() {
-        guard isCompactInspectorPresented else {
-            isSiteComparisonPresented = true
-            return
-        }
-        isCompactInspectorPresented = false
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(450))
-            self?.isSiteComparisonPresented = true
-        }
+        present(\.isSiteComparisonPresented)
     }
 
     /// Opens the Site Explorer once a sheet has finished dismissing.

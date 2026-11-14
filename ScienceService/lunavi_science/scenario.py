@@ -23,6 +23,8 @@ import numpy as np
 from . import SCHEMA_VERSION, __version__
 from . import intervals as iv
 from .basemap import render_basemap
+from .coverage import check_kernel_coverage, check_terrain
+from .terrain import site_terrain
 from .dem import LUNAR_RADIUS_M, DemLayer, DemSampler, crs_name, make_to_xy, read_crs_wkt
 from .ephemeris import EARTH_RADIUS_KM, SUN_RADIUS_KM, angular_radius_deg, load_kernels, site_vector_km, target_azel
 from .horizon import HorizonMask, compute_horizon
@@ -51,6 +53,7 @@ class Settings:
     duration_options: list = field(default_factory=lambda: [6, 12, 24, 48])
     sensitivity_heights: list = field(default_factory=lambda: [10.0])
     sensitivity_clearances: list = field(default_factory=lambda: [0.5])
+    terrain_radius_m: float = 25.0
 
 
 def settings_from_config(cfg: dict) -> Settings:
@@ -70,6 +73,7 @@ def settings_from_config(cfg: dict) -> Settings:
         duration_options=[int(v) for v in mission.get("durationOptions", [6, 12, 24, 48])],
         sensitivity_heights=[float(v) for v in model.get("sensitivityObserverHeightsM", [10.0])],
         sensitivity_clearances=[float(v) for v in model.get("sensitivityClearancesDeg", [0.5])],
+        terrain_radius_m=float(model.get("terrainRadiusM", 25.0)),
     )
 
 
@@ -230,11 +234,30 @@ def _load_layers(cfg: dict, resolve, sites: list) -> list:
     return layers
 
 
-def build(config_path: str, out_dir: str, spice=None) -> dict:
+def apply_period_override(cfg: dict, start: Optional[str] = None, end: Optional[str] = None,
+                          step_seconds: Optional[float] = None) -> dict:
+    """Returns a copy of cfg with the requested period. Values are parsed (and so validated) here."""
+    period = dict(cfg.get("period", {}))
+    if start is not None:
+        period["start"] = iso(parse_utc(start))
+    if end is not None:
+        period["end"] = iso(parse_utc(end))
+    if step_seconds is not None:
+        if step_seconds <= 0:
+            raise ValueError("period step must be positive")
+        period["stepSeconds"] = float(step_seconds)
+    return dict(cfg, period=period)
+
+
+def build(config_path: str, out_dir: str, spice=None, start: Optional[str] = None, end: Optional[str] = None,
+          step_seconds: Optional[float] = None, output_name: str = "ComputedScenario") -> dict:
+    """Computes a scenario for the configured (or overridden) period and writes <output_name>.json."""
     if spice is None:
         import spiceypy as spice
+    if not output_name.startswith("ComputedScenario") or "/" in output_name:
+        raise ValueError("output name must start with 'ComputedScenario' (the app discovers files by that prefix)")
     with open(config_path) as f:
-        cfg = json.load(f)
+        cfg = apply_period_override(json.load(f), start, end, step_seconds)
     base = os.path.dirname(os.path.abspath(config_path))
 
     def resolve(p: str) -> str:
@@ -251,10 +274,17 @@ def build(config_path: str, out_dir: str, spice=None) -> dict:
 
     kernels = load_kernels(spice, [resolve(k) for k in cfg["kernels"]])
     lsk = has_leapseconds_kernel(spice)
+    kernel_coverage = check_kernel_coverage(spice, kernels, s.start, s.end)
+    if not kernel_coverage.ok:
+        raise ValueError("The requested period is not supported by the loaded SPICE kernels:\n"
+                         + "\n".join(kernel_coverage.errors))
 
     layer_cfgs = cfg["dem"]["layers"]
     layers = _load_layers(cfg, resolve, cfg["sites"])
     sampler = DemSampler(layers)
+    terrain_errors = check_terrain(sampler, cfg["sites"])
+    if terrain_errors:
+        raise ValueError("Terrain data is missing:\n" + "\n".join(terrain_errors))
 
     times = time_grid(s.start, s.end, s.step_s)
     ets = [utc_to_et(t, spice) for t in times]
@@ -364,7 +394,7 @@ def build(config_path: str, out_dir: str, spice=None) -> dict:
         "limitations": [
             "Horizon accuracy is limited by DEM resolution and interpolation (about 90 % of PGDA product 78 pixels are interpolated).",
             "Transition times are bisected to about ±30 s and displayed to the minute.",
-            "Geometric visibility only: no power, thermal, radio-link or landing-safety modelling.",
+            "Visibility is geometric only: no thermal, radio-link or landing-safety modelling. The app's solar power estimate is experimental and its terrain values are characterization only, not a hazard assessment.",
         ],
         "provenance": provenance,
         "validation": [
@@ -378,7 +408,14 @@ def build(config_path: str, out_dir: str, spice=None) -> dict:
     scenario = {
         "schemaVersion": SCHEMA_VERSION,
         "generator": f"lunavi_science {__version__}",
-        "period": {"start": iso(times[0]), "end": iso(times[-1])},
+        "period": {"start": iso(times[0]), "end": iso(times[-1]), "stepSeconds": s.step_s, "sampleCount": len(times)},
+        "coverage": {
+            "requestedStart": iso(s.start), "requestedEnd": iso(s.end),
+            "computedStart": iso(times[0]), "computedEnd": iso(times[-1]),
+            "stepSeconds": s.step_s, "sampleCount": len(times),
+            "kernels": kernel_coverage.to_json(),
+            "terrain": "Every site has LOLA surface data in at least one configured DEM layer.",
+        },
         "mission": {"missionName": cfg.get("missionName", "LUNAVI South Pole Analysis"), "siteID": demo_site, "start": iso(demo_start),
                     "durationHours": s.duration_h, "delayHours": s.delay_h, "durationOptions": s.duration_options},
         "basemap": basemap,
@@ -388,10 +425,11 @@ def build(config_path: str, out_dir: str, spice=None) -> dict:
                         "earthLineOfSight": _ranges(c.earth), "events": c.events} for c in computations],
         "sensitivity": sensitivity,
         "geometry": [geometry_json(c, s, times) for c in computations],
+        "terrain": [site_terrain(layers, c.config, s.terrain_radius_m) for c in computations],
     }
     errors = validate_scenario(scenario)
     if errors:
         raise ValueError("Scenario failed schema validation:\n" + "\n".join(errors))
-    with open(os.path.join(out_dir, "ComputedScenario.json"), "w") as f:
+    with open(os.path.join(out_dir, output_name + ".json"), "w") as f:
         json.dump(scenario, f, indent=2, ensure_ascii=False)
     return scenario

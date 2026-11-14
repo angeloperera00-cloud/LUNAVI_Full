@@ -67,8 +67,8 @@ struct MissionParametersSection: View {
         .buttonStyle(.plain)
         .disabled(!store.canEditParameters)
         .popover(isPresented: $isEditingStart) {
-            StartTimeEditor(initial: plan.start) { newValue in
-                store.updateStart(newValue)
+            StartTimeEditor(initial: plan.start, allowedRange: store.allowedStartRange) { newValue in
+                _ = store.updateStart(newValue)
             }
         }
         .accessibilityLabel("Landing time")
@@ -116,16 +116,31 @@ struct DurationSelector: View {
 }
 
 /// UTC date/time editor. The pickers run in UTC regardless of the device time zone.
+///
+/// Start times are limited to the computed data coverage (`allowedRange`): the app never offers a date
+/// for which no scientific data was generated. Without coverage (no data at all) the editor is unrestricted
+/// and every result stays Unknown.
 struct StartTimeEditor: View {
     let initial: Date
+    let allowedRange: ClosedRange<Date>?
     let onCommit: (Date) -> Void
     @State private var draft: Date
     @Environment(\.dismiss) private var dismiss
 
-    init(initial: Date, onCommit: @escaping (Date) -> Void) {
+    init(initial: Date, allowedRange: ClosedRange<Date>? = nil, onCommit: @escaping (Date) -> Void) {
         self.initial = initial
+        self.allowedRange = allowedRange
         self.onCommit = onCommit
         _draft = State(initialValue: initial)
+    }
+
+    private var pickerRange: ClosedRange<Date> {
+        allowedRange ?? Date.distantPast...Date.distantFuture
+    }
+
+    private func clamped(_ date: Date) -> Date {
+        guard let allowedRange else { return date }
+        return min(max(date, allowedRange.lowerBound), allowedRange.upperBound)
     }
 
     var body: some View {
@@ -133,13 +148,13 @@ struct StartTimeEditor: View {
             Text("Landing time (UTC)")
                 .font(LunaviTypography.headline)
                 .foregroundStyle(LunaviColors.textPrimary)
-            DatePicker("Date", selection: $draft, displayedComponents: [.date])
+            DatePicker("Date", selection: $draft, in: pickerRange, displayedComponents: [.date])
                 .datePickerStyle(.graphical)
             HStack {
                 Text("Time (UTC)")
                     .font(LunaviTypography.body)
                 Spacer()
-                DatePicker("Time (UTC)", selection: $draft, displayedComponents: [.hourAndMinute])
+                DatePicker("Time (UTC)", selection: $draft, in: pickerRange, displayedComponents: [.hourAndMinute])
                     .labelsHidden()
             }
             HStack(spacing: LunaviSpacing.s) {
@@ -151,6 +166,13 @@ struct StartTimeEditor: View {
             Text(UTCFormat.full(draft))
                 .font(LunaviTypography.measurement)
                 .foregroundStyle(LunaviColors.selectedTime)
+            if let allowedRange {
+                Text("Computed data covers \(UTCFormat.full(allowedRange.lowerBound)) – \(UTCFormat.full(allowedRange.upperBound.addingTimeInterval(60))). Later dates need a new pipeline run.")
+                    .font(LunaviTypography.caption)
+                    .foregroundStyle(LunaviColors.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("startEditor.coverage")
+            }
             HStack {
                 Button("Cancel") { dismiss() }
                     .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
@@ -172,7 +194,7 @@ struct StartTimeEditor: View {
 
     private func step(_ title: String, _ seconds: TimeInterval) -> some View {
         Button(title) {
-            draft = draft.addingTimeInterval(seconds)
+            draft = clamped(draft.addingTimeInterval(seconds))
         }
         .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
         .monospacedDigit()

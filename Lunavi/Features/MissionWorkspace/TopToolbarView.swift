@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Quiet top toolbar: brand, site and mission, data mode, Shadow Analysis, Data & Method, Reset.
+/// Quiet top toolbar: brand, site and mission, data mode, Shadow Analysis, Data & Method, Report, Help, Reset.
 ///
 /// It never grows wider than the window: the mission name truncates first, then the action labels
 /// collapse to icons (`iconOnlyActions`), and below the compact breakpoint the mission name hides.
@@ -49,6 +49,26 @@ struct TopToolbarView: View {
             .labelStyle(AdaptiveLabelStyle(iconOnly: isCompact || iconOnlyActions))
             .accessibilityLabel("Data and Method")
             .accessibilityIdentifier("toolbar.dataAndMethod")
+
+            Button {
+                navigation.isReportPresented = true
+            } label: {
+                Label("Report", systemImage: "doc.richtext")
+            }
+            .buttonStyle(LunaviToolbarButtonStyle())
+            .labelStyle(AdaptiveLabelStyle(iconOnly: true))
+            .accessibilityLabel("Mission report")
+            .accessibilityIdentifier("toolbar.report")
+
+            Button {
+                navigation.isTutorialPresented = true
+            } label: {
+                Label("Help", systemImage: "questionmark.circle")
+            }
+            .buttonStyle(LunaviToolbarButtonStyle())
+            .labelStyle(AdaptiveLabelStyle(iconOnly: true))
+            .accessibilityLabel("Help and tutorial")
+            .accessibilityIdentifier("toolbar.help")
 
             Button {
                 container.resetAll()

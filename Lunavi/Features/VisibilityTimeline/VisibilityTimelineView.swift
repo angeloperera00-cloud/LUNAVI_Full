@@ -32,6 +32,10 @@ struct VisibilityTimelineView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(LunaviColors.background)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: model.range)
+        .onChange(of: store.timelineFocus) { _, focus in
+            // A focused interval (e.g. a selected Earth window) is shown in Focus mode.
+            if focus != nil { zoom = .focus }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("timeline")
     }
@@ -50,6 +54,17 @@ struct TimelineHeader: View {
                 .lineLimit(1)
                 .layoutPriority(1)
             Spacer(minLength: LunaviSpacing.s)
+            if store.timelineFocus != nil {
+                Button {
+                    store.clearTimelineFocus()
+                } label: {
+                    Label("Clear focus", systemImage: "xmark.circle")
+                }
+                .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
+                .labelStyle(.iconOnly)
+                .accessibilityLabel("Clear timeline focus")
+                .accessibilityIdentifier("timeline.clearFocus")
+            }
             cursorReadout
             eventButtons
             Picker("Timeline range", selection: $zoom) {

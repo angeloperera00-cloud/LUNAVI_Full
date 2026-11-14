@@ -11,8 +11,12 @@ struct SiteComparisonView: View {
     }
 
     @Environment(MissionStore.self) private var store
+    @Environment(MapState.self) private var mapState
     @Environment(\.dismiss) private var dismiss
     @State private var source: WindowSource = .committed
+    /// Site previewed in this screen. Previewing never changes the mission plan.
+    @State private var previewSiteID: String?
+    @State private var commitNote: String?
 
     private var plan: MissionPlan? {
         switch source {
@@ -31,35 +35,118 @@ struct SiteComparisonView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: LunaviSpacing.l) {
-                    if store.isSimulated {
-                        Label("Simulated demo — illustrative intervals, not lunar data.", systemImage: "info.circle")
-                            .font(LunaviTypography.captionEmphasis)
-                            .foregroundStyle(LunaviColors.selectedTime)
+            content
+                .background(LunaviColors.backgroundSecondary)
+                .navigationTitle("Site Comparison")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }
+                            .accessibilityIdentifier("comparison.done")
                     }
-                    windowHeader
-                    ForEach(rows) { row in
-                        SiteComparisonCard(row: row, isPlanSite: row.siteID == plan?.siteID)
-                    }
-                    rulesFooter
                 }
-                .font(LunaviTypography.body)
-                .foregroundStyle(LunaviColors.textSecondary)
-                .frame(maxWidth: 880, alignment: .leading)
-                .padding(LunaviSpacing.xl)
-            }
-            .background(LunaviColors.backgroundSecondary)
-            .navigationTitle("Site Comparison")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .accessibilityIdentifier("comparison.done")
-                }
-            }
         }
         .presentationBackground(LunaviColors.backgroundSecondary)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch store.loadState {
+        case .idle, .loading:
+            VStack(spacing: LunaviSpacing.m) {
+                ProgressView()
+                Text("Loading mission data…").font(LunaviTypography.body).foregroundStyle(LunaviColors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityIdentifier("comparison.loading")
+        case .failed(let message):
+            ContentUnavailableView("Comparison unavailable", systemImage: "exclamationmark.triangle", description: Text(message))
+                .accessibilityIdentifier("comparison.error")
+        case .loaded:
+            if plan == nil || rows.isEmpty {
+                ContentUnavailableView("No sites to compare", systemImage: "square.split.3x1",
+                                       description: Text("The scenario has no mapped sites or no mission plan."))
+                    .accessibilityIdentifier("comparison.empty")
+            } else {
+                results
+            }
+        }
+    }
+
+    private var results: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: LunaviSpacing.l) {
+                if store.isSimulated {
+                    Label("Simulated demo — illustrative intervals, not lunar data.", systemImage: "info.circle")
+                        .font(LunaviTypography.captionEmphasis)
+                        .foregroundStyle(LunaviColors.selectedTime)
+                }
+                windowHeader
+                if let previewSiteID, let row = rows.first(where: { $0.siteID == previewSiteID }) {
+                    previewBanner(row)
+                }
+                if let commitNote {
+                    NoticeBanner(text: commitNote)
+                        .accessibilityIdentifier("comparison.commitNote")
+                }
+                ForEach(rows) { row in
+                    SiteComparisonCard(
+                        row: row,
+                        isPlanSite: row.siteID == plan?.siteID,
+                        isPreviewed: row.siteID == previewSiteID,
+                        commit: SiteComparisonService.commitAvailability(for: row, planSiteID: store.committedPlan?.siteID,
+                                                                         canEditPlan: store.canEditParameters && source == .committed),
+                        onPreview: { previewSiteID = (previewSiteID == row.siteID) ? nil : row.siteID },
+                        onCommit: { commit(row) }
+                    )
+                }
+                rulesFooter
+            }
+            .font(LunaviTypography.body)
+            .foregroundStyle(LunaviColors.textSecondary)
+            .frame(maxWidth: 880, alignment: .leading)
+            .padding(LunaviSpacing.xl)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func previewBanner(_ row: SiteComparisonRow) -> some View {
+        PanelCard(strokeColor: LunaviColors.selectedTime.opacity(0.6)) {
+            VStack(alignment: .leading, spacing: LunaviSpacing.s) {
+                HStack {
+                    PreviewTag()
+                    Text("\(row.siteName) at the same UTC window")
+                        .font(LunaviTypography.bodyEmphasis)
+                        .foregroundStyle(LunaviColors.textPrimary)
+                }
+                Text("Preview only — the mission plan is unchanged. Show it on the map, or commit it with Use for Plan.")
+                    .font(LunaviTypography.caption)
+                    .foregroundStyle(LunaviColors.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    mapState.inspectedSiteID = row.siteID
+                    if let point = store.site(id: row.siteID)?.mapPosition {
+                        mapState.center(on: point)
+                    }
+                    dismiss()
+                } label: {
+                    Label("Show on Map", systemImage: "map")
+                }
+                .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
+                .accessibilityIdentifier("comparison.showOnMap")
+            }
+        }
+        .accessibilityIdentifier("comparison.previewBanner")
+    }
+
+    private func commit(_ row: SiteComparisonRow) {
+        guard SiteComparisonService.commitAvailability(for: row, planSiteID: store.committedPlan?.siteID,
+                                                       canEditPlan: store.canEditParameters && source == .committed) == .available else { return }
+        store.planMission(at: row.siteID)
+        previewSiteID = nil
+        if let plan = store.committedPlan, plan.siteID == row.siteID {
+            commitNote = "Plan updated: \(row.siteName), \(UTCFormat.full(plan.start)) for \(plan.durationHours) h."
+        }
     }
 
     private var windowHeader: some View {
@@ -107,9 +194,13 @@ struct SiteComparisonView: View {
 struct SiteComparisonCard: View {
     let row: SiteComparisonRow
     let isPlanSite: Bool
+    var isPreviewed = false
+    var commit: ComparisonCommitAvailability = .noData
+    var onPreview: () -> Void = {}
+    var onCommit: () -> Void = {}
 
     var body: some View {
-        PanelCard(strokeColor: isPlanSite ? LunaviColors.selectedTime.opacity(0.7) : LunaviColors.border) {
+        PanelCard(strokeColor: isPlanSite || isPreviewed ? LunaviColors.selectedTime.opacity(0.7) : LunaviColors.border) {
             VStack(alignment: .leading, spacing: LunaviSpacing.s) {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline) {
@@ -127,16 +218,41 @@ struct SiteComparisonCard: View {
                     conditionRow(row.evaluation.earth, color: LunaviColors.earthTrack, lowest: row.lowestEarthClearanceDeg)
                     KeyValueRow("Data completeness", UTCFormat.percent(row.dataCompleteness),
                                 valueColor: row.dataCompleteness < 1 ? LunaviColors.unknown : LunaviColors.textPrimary)
+                    KeyValueRow("Continuous from start", "Sun \(UTCFormat.duration(row.continuousFromStart(.sunlight))) · Earth \(UTCFormat.duration(row.continuousFromStart(.earthLineOfSight)))")
                     obstructionList
                 } else {
                     Text("No computed data for this site — not analysed. Shown as Unknown, never as suitable.")
                         .font(LunaviTypography.caption)
                         .foregroundStyle(LunaviColors.textMuted)
                 }
+                actions
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("comparison.site.\(row.siteID)")
+    }
+
+    private var actions: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: LunaviSpacing.s) {
+                if row.hasData && !isPlanSite {
+                    Button(isPreviewed ? "End Preview" : "Preview", action: onPreview)
+                        .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
+                        .accessibilityIdentifier("comparison.preview.\(row.siteID)")
+                }
+                Button("Use for Plan", action: onCommit)
+                    .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
+                    .disabled(commit != .available)
+                    .accessibilityHint(commit.reason ?? "Changes the committed mission plan to this site at the same UTC window.")
+                    .accessibilityIdentifier("comparison.commit.\(row.siteID)")
+            }
+            if let reason = commit.reason, commit != .alreadyPlanSite {
+                Text(reason)
+                    .font(LunaviTypography.micro)
+                    .foregroundStyle(LunaviColors.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     private var title: some View {

@@ -3,7 +3,9 @@ import SwiftUI
 /// Scientific transparency: what the session uses, what LUNAVI calculates, and the limits.
 struct DataAndMethodView: View {
     @Environment(MissionStore.self) private var store
+    @Environment(AppContainer.self) private var container
     @Environment(\.dismiss) private var dismiss
+    @State private var catalog: [ScenarioCatalogEntry] = []
 
     var body: some View {
         NavigationStack {
@@ -11,6 +13,7 @@ struct DataAndMethodView: View {
                 VStack(alignment: .leading, spacing: LunaviSpacing.xl) {
                     disclaimer
                     sessionStatus
+                    datasetsSection
                     if let metadata = store.metadata {
                         imagerySection(metadata)
                         elevationSection
@@ -30,6 +33,7 @@ struct DataAndMethodView: View {
                 .frame(maxWidth: .infinity)
             }
             .background(LunaviColors.backgroundSecondary)
+            .task { catalog = ScenarioCatalog.entries() }
             .navigationTitle("Data & Method")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -43,6 +47,51 @@ struct DataAndMethodView: View {
     }
 
     // MARK: Sections
+
+    /// Bundled computed date ranges. Each one is a separate pipeline run; dates outside every
+    /// generated range are not offered.
+    private var datasetsSection: some View {
+        VStack(alignment: .leading, spacing: LunaviSpacing.s) {
+            Text("Computed date ranges").lunaviSectionLabel()
+            if let coverage = store.dataCoverage {
+                KeyValueRow("In use", "\(UTCFormat.full(coverage.start)) – \(UTCFormat.full(coverage.end))")
+            } else {
+                KeyValueRow("In use", "No computed coverage", valueColor: LunaviColors.unknown)
+            }
+            if catalog.isEmpty {
+                Text("No ComputedScenario*.json is bundled; the session uses the simulated fixture. Generate a range with ScienceService/scripts/build_real_data.sh --start … --end … (see docs/DATE_RANGES.md).")
+                    .font(LunaviTypography.caption)
+                    .foregroundStyle(LunaviColors.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(catalog) { entry in
+                let inUse = entry.metadataID == store.metadata?.id
+                PanelCard(strokeColor: inUse ? LunaviColors.selectedTime.opacity(0.6) : LunaviColors.border) {
+                    HStack(alignment: .center, spacing: LunaviSpacing.m) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(UTCFormat.dayMonthYear(entry.coverage.start)) – \(UTCFormat.dayMonthYear(entry.coverage.end))")
+                                .font(LunaviTypography.measurement)
+                                .foregroundStyle(LunaviColors.textPrimary)
+                            Text("\(entry.resourceName).json · \(entry.stepSeconds.map { "\(Int($0)) s sampling" } ?? "sampling not stated")")
+                                .font(LunaviTypography.caption)
+                                .foregroundStyle(LunaviColors.textMuted)
+                        }
+                        Spacer()
+                        if inUse {
+                            Text("IN USE")
+                                .font(LunaviTypography.micro.weight(.semibold))
+                                .foregroundStyle(LunaviColors.selectedTime)
+                        } else {
+                            Button("Use") { container.switchScenario(to: entry) }
+                                .buttonStyle(LunaviSecondaryButtonStyle(compact: true))
+                                .accessibilityLabel("Use computed data \(UTCFormat.dayMonthYear(entry.coverage.start)) to \(UTCFormat.dayMonthYear(entry.coverage.end))")
+                        }
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("dataMethod.dateRanges")
+    }
 
     private var disclaimer: some View {
         Text("LUNAVI is an independent project for the NASA Space Apps Challenge 2026. It uses publicly available NASA data and tools and is not affiliated with, endorsed by, or approved by NASA. Results are geometric visibility analyses, not operational flight products.")

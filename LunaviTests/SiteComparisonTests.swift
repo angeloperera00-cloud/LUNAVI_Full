@@ -65,3 +65,58 @@ struct SiteComparisonTests {
         #expect(zip(segments, segments.dropFirst()).allSatisfy { $0.range.end == $1.range.start })
     }
 }
+
+@Suite("Site comparison — preview and commit")
+@MainActor
+struct SiteComparisonCommitTests {
+    private func rows(_ store: MissionStore, start: Date, hours: Int) throws -> [SiteComparisonRow] {
+        let scenario = try #require(store.scenario)
+        return SiteComparisonService.rows(start: start, durationHours: hours, sites: scenario.sites,
+                                          visibility: scenario.visibility, geometry: scenario.geometry)
+    }
+
+    @Test("Commit availability: plan site, no data, locked phase, available")
+    func commitAvailability() throws {
+        let store = try makeDemoStore()
+        let plan = try #require(store.committedPlan)
+        let result = try rows(store, start: plan.start, hours: plan.durationHours)
+        let a = try #require(result.first { $0.siteID == "demo-point-a" })
+        let b = try #require(result.first { $0.siteID == "ridge-site-b" })
+        let c = try #require(result.first { $0.siteID == "demo-point-c" })
+        #expect(SiteComparisonService.commitAvailability(for: a, planSiteID: plan.siteID, canEditPlan: true) == .alreadyPlanSite)
+        #expect(SiteComparisonService.commitAvailability(for: b, planSiteID: plan.siteID, canEditPlan: true) == .available)
+        #expect(SiteComparisonService.commitAvailability(for: b, planSiteID: plan.siteID, canEditPlan: false) == .lockedByMissionPhase)
+        #expect(SiteComparisonService.commitAvailability(for: c, planSiteID: plan.siteID, canEditPlan: true) == .noData)
+    }
+
+    @Test("Previewing (computing rows) never changes the plan; committing goes through planMission")
+    func previewVersusCommit() throws {
+        let store = try makeDemoStore()
+        let before = try #require(store.committedPlan)
+        _ = try rows(store, start: before.start, hours: before.durationHours)
+        #expect(store.committedPlan == before)
+        store.planMission(at: "ridge-site-b")
+        #expect(store.committedPlan?.siteID == "ridge-site-b")
+        #expect(store.committedPlan?.start == before.start)
+        #expect(store.committedPlan?.durationHours == before.durationHours)
+    }
+
+    @Test("While a delay comparison is open, the plan cannot be changed from the comparison")
+    func lockedDuringDelay() throws {
+        let store = try makeDemoStore()
+        store.simulateDelay()
+        #expect(store.canEditParameters == false)
+        store.planMission(at: "ridge-site-b")
+        #expect(store.committedPlan?.siteID == "demo-point-a")
+    }
+
+    @Test("Continuous coverage from the window start matches the evaluator")
+    func continuousFromStart() throws {
+        let store = try makeDemoStore()
+        let result = try rows(store, start: TestTime.utc("2026-11-20T12:00:00Z"), hours: 24)
+        let a = try #require(result.first { $0.siteID == "demo-point-a" })
+        // Sunlight at Demo Point A is obstructed from 21 NOV 08:00, 20 h after the window start.
+        #expect(a.continuousFromStart(.sunlight) == 20 * 3600)
+        #expect(a.continuousFromStart(.earthLineOfSight) == 24 * 3600)
+    }
+}

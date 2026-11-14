@@ -20,6 +20,16 @@ def main(argv=None) -> int:
     build = sub.add_parser("build", help="compute visibility and write ComputedScenario.json + basemap")
     build.add_argument("--config", required=True)
     build.add_argument("--out", default="out")
+    build.add_argument("--start", help="override period.start (ISO 8601 UTC)")
+    build.add_argument("--end", help="override period.end (ISO 8601 UTC)")
+    build.add_argument("--step", type=float, help="override period.stepSeconds")
+    build.add_argument("--name", default="ComputedScenario",
+                       help="output file name without .json; must start with ComputedScenario")
+
+    cov = sub.add_parser("check-coverage", help="check a period against the SPICE kernels and DEM before building")
+    cov.add_argument("--config", required=True)
+    cov.add_argument("--start")
+    cov.add_argument("--end")
 
     check = sub.add_parser("horizons-check", help="compare SPICE az/el with JPL Horizons and record the result")
     check.add_argument("--scenario", required=True)
@@ -53,13 +63,30 @@ def main(argv=None) -> int:
     if args.command == "build":
         from .scenario import build as build_scenario
         try:
-            scenario = build_scenario(args.config, args.out)
+            scenario = build_scenario(args.config, args.out, start=args.start, end=args.end,
+                                      step_seconds=args.step, output_name=args.name)
         except (ValueError, FileNotFoundError) as error:
             print(f"error: {error}", file=sys.stderr)
             return 2
-        mission = scenario["mission"]
-        print(f"Wrote {args.out}/ComputedScenario.json — default plan {mission['siteID']} at {mission['start']} for {mission['durationHours']} h")
+        mission, period = scenario["mission"], scenario["period"]
+        print(f"Wrote {args.out}/{args.name}.json — computed {period['start']} to {period['end']} "
+              f"({period['sampleCount']} samples); default plan {mission['siteID']} at {mission['start']} for {mission['durationHours']} h")
         return 0
+
+    if args.command == "check-coverage":
+        import os
+        import spiceypy as spice
+        from .coverage import check_kernel_coverage
+        from .ephemeris import load_kernels
+        from .scenario import apply_period_override, settings_from_config
+        with open(args.config) as f:
+            cfg = apply_period_override(json.load(f), args.start, args.end)
+        base = os.path.dirname(os.path.abspath(args.config))
+        paths = [k if os.path.isabs(k) else os.path.join(base, k) for k in cfg["kernels"]]
+        s = settings_from_config(cfg)
+        report = check_kernel_coverage(spice, load_kernels(spice, paths), s.start, s.end)
+        print(json.dumps(report.to_json(), indent=2))
+        return 0 if report.ok else 1
 
     if args.command == "make-config":
         from .rois import make_config

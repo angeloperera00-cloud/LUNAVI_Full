@@ -32,6 +32,10 @@ struct ScenarioBundle: Sendable {
     var sensitivity: [SensitivityVariant]
     /// Shadow-analysis geometry by site (schema 2). Empty for the simulated fixture and older files.
     var geometry: [String: ShadowGeometry] = [:]
+    /// Terrain characteristics by site (schema 3). Empty for the simulated fixture and older files.
+    var terrain: [String: TerrainCharacteristics] = [:]
+    /// Declared computation period (pipeline `period`), when the file has one.
+    var declaredPeriod: ScenarioPeriod? = nil
 
     func site(id: String) -> LunarSite? {
         sites.first { $0.id == id }
@@ -40,6 +44,32 @@ struct ScenarioBundle: Sendable {
     func siteName(_ id: String) -> String {
         site(id: id)?.name ?? id
     }
+
+    /// Earliest coverage start to latest coverage end over every site: the only span in which the
+    /// app evaluates plans. Gaps inside it stay Unknown. `nil` when no site has data.
+    var coverageHull: UTCRange? {
+        let all = visibility.values.flatMap(\.coverage)
+        guard let start = all.map(\.start).min(), let end = all.map(\.end).max(), end > start else { return nil }
+        return UTCRange(start: start, end: end)
+    }
+
+    /// Mission start times the editor accepts: inside the coverage hull, at least one minute before it ends.
+    var allowedStartRange: ClosedRange<Date>? {
+        guard let hull = coverageHull else { return nil }
+        let last = hull.end.addingTimeInterval(-60)
+        return last > hull.start ? hull.start...last : nil
+    }
+}
+
+/// The computation period and sampling declared by the science pipeline.
+struct ScenarioPeriod: Codable, Hashable, Sendable {
+    var start: Date
+    var end: Date
+    /// Sample spacing in seconds (pipeline schema 3+).
+    var stepSeconds: Double?
+    var sampleCount: Int?
+
+    var range: UTCRange { UTCRange(start: start, end: end) }
 }
 
 // MARK: - File formats
@@ -73,4 +103,8 @@ struct ComputedScenarioFile: Codable, Sendable {
     var visibility: [SiteVisibility]
     var sensitivity: [SensitivityVariant]?
     var geometry: [ShadowGeometry]?
+    /// Computation period (written by every pipeline build; optional so older files still decode).
+    var period: ScenarioPeriod?
+    /// Terrain characteristics per site (schema 3). Absent in older files.
+    var terrain: [TerrainCharacteristics]?
 }

@@ -28,7 +28,20 @@ struct DatasetRepository: Sendable {
             let data = try Self.read(url, name: "ComputedScenario.json")
             return try Self.scenario(fromComputedJSON: data, resourceName: "ComputedScenario.json")
         }
+        // Only named date ranges (ComputedScenario_YYYYMMDD_YYYYMMDD.json) are bundled: use the earliest.
+        if let first = ScenarioCatalog.entries().first {
+            return try loadComputedScenario(resource: first.resourceName)
+        }
         return try loadDemoScenario()
+    }
+
+    /// Loads one bundled computed scenario by resource name (see `ScenarioCatalog`).
+    func loadComputedScenario(resource: String) throws -> ScenarioBundle {
+        guard let url = Bundle.main.url(forResource: resource, withExtension: "json") else {
+            throw DatasetError.missingResource("\(resource).json")
+        }
+        let data = try Self.read(url, name: "\(resource).json")
+        return try Self.scenario(fromComputedJSON: data, resourceName: "\(resource).json")
     }
 
     func loadDemoScenario() throws -> ScenarioBundle {
@@ -61,10 +74,20 @@ struct DatasetRepository: Sendable {
             metadata: metadata,
             basemap: file.basemap,
             sensitivity: file.sensitivity ?? [],
-            geometry: geometryIndex(file.geometry ?? [], sites: file.sites)
+            geometry: geometryIndex(file.geometry ?? [], sites: file.sites),
+            terrain: terrainIndex(file.terrain ?? [], sites: file.sites),
+            declaredPeriod: file.period
         )
         try validate(scenario)
         return scenario
+    }
+
+    /// Keeps terrain entries for known sites whose values are physically meaningful; others are dropped
+    /// so the app shows "not available" instead of a malformed number.
+    static func terrainIndex(_ items: [TerrainCharacteristics], sites: [LunarSite]) -> [String: TerrainCharacteristics] {
+        let known = Set(sites.map(\.id))
+        let valid = items.filter { known.contains($0.siteID) && $0.isPhysicallyValid }
+        return Dictionary(valid.map { ($0.siteID, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     /// Keeps only geometry that belongs to a known site and whose arrays are consistent; anything else
@@ -98,6 +121,27 @@ struct DatasetRepository: Sendable {
             }
             for range in data.coverage + data.sunlight + data.earthLineOfSight where range.end <= range.start {
                 throw DatasetError.invalidData("Invalid interval for site '\(siteID)': end must be after start.")
+            }
+        }
+        try validateCoverage(scenario)
+    }
+
+    /// Coverage must lie inside the declared computation period (when declared): coverage outside the
+    /// computed period would mean values that were never computed. Visibility intervals are not
+    /// required to sit inside coverage; the evaluator intersects them with coverage, so time outside
+    /// coverage is always Unknown.
+    static func validateCoverage(_ scenario: ScenarioBundle) throws {
+        // Interval end points are bisected to about ±30 s, so allow one minute of tolerance.
+        let tolerance: TimeInterval = 60
+        if let period = scenario.declaredPeriod {
+            guard period.end > period.start else {
+                throw DatasetError.invalidData("The declared computation period ends before it starts.")
+            }
+            for (siteID, data) in scenario.visibility {
+                for range in data.coverage where range.start < period.start.addingTimeInterval(-tolerance)
+                    || range.end > period.end.addingTimeInterval(tolerance) {
+                    throw DatasetError.invalidData("Coverage for site '\(siteID)' extends outside the computed period \(UTCFormat.iso(period.start)) – \(UTCFormat.iso(period.end)).")
+                }
             }
         }
     }

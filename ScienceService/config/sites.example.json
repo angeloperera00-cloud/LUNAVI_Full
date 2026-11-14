@@ -63,6 +63,7 @@
     "maxDistanceM": 150000,
     "azimuthStepDeg": 0.5,
     "nearStepM": 10.0,
+    "terrainRadiusM": 25.0,
     "sensitivityObserverHeightsM": [
       10.0
     ],

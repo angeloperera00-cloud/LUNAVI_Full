@@ -187,7 +187,9 @@ struct TimelineModel: Sendable {
             ranges += store.visibility(for: store.committedPlan?.siteID)?.coverage ?? []
             ranges += windows.map(\.range)
         case .focus:
-            if let preview = store.previewCandidate {
+            if let focus = store.timelineFocus {
+                ranges = [focus]
+            } else if let preview = store.previewCandidate {
                 ranges = [preview.plan.window]
             } else {
                 ranges = windows.map(\.range)

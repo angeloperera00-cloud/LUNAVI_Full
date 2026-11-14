@@ -56,6 +56,7 @@ def built(tmp_path_factory, spice):
         "basemap": {"sizePx": 256, "marginM": 8_000},
         "period": {"start": "2026-11-17T00:00:00Z", "end": "2026-11-30T00:00:00Z", "stepSeconds": 1800},
         "model": {"observerHeightM": 2.0, "azimuthStepDeg": 1.0, "nearStepM": 50.0, "maxDistanceM": 150_000,
+                  "terrainRadiusM": 1_000,
                   "sensitivityObserverHeightsM": [10.0], "sensitivityClearancesDeg": [0.5]},
         "mission": {"durationHours": 24, "delayHours": 6, "durationOptions": [6, 12, 24, 48]},
         "sites": [dict(site, coordinateSource="synthetic test input") for site in SITES],
@@ -195,3 +196,39 @@ def test_find_demo_case_on_the_app_fixture_intervals(fixture_scenario):
                                             data.coverage, data.sunlight, data.earth, data.events))
     settings = settings_from_config({"period": {"start": "2026-11-19T00:00:00Z", "end": "2026-11-28T00:00:00Z"}})
     assert find_demo_case(computations, settings) == ("demo-point-a", parse_utc("2026-11-20T03:00:00Z"))
+
+
+def test_period_and_coverage_metadata(built):
+    _, config, scenario = built
+    period = scenario["period"]
+    grid = ranges([{"start": config["period"]["start"], "end": config["period"]["end"]}])[0]
+    assert period["start"] == config["period"]["start"]
+    assert period["stepSeconds"] == 1800
+    assert period["sampleCount"] == int((grid[1] - grid[0]).total_seconds() // 1800) + 1
+    coverage = scenario["coverage"]
+    assert coverage["kernels"]["ok"] is True
+    assert coverage["computedEnd"] == period["end"]
+    # Every site's coverage lies inside the computed period (what the app validates).
+    start, end = parse_utc(period["start"]), parse_utc(period["end"])
+    for site in scenario["visibility"]:
+        for a, b in ranges(site["coverage"]):
+            assert start <= a and b <= end
+
+
+def test_terrain_from_the_raster_matches_the_analytic_surface(built):
+    """Raster path (pixel centres of a 200 m GeoTIFF): slope agrees with the analytic gradient."""
+    _, config, scenario = built
+    assert {t["siteID"] for t in scenario["terrain"]} == {site["id"] for site in SITES}
+    for site, terrain in zip(SITES, scenario["terrain"]):
+        assert terrain["available"], terrain
+        assert terrain["radiusM"] == 1_000 and terrain["resolutionM"] == pytest.approx(200.0)
+        x, y = polar_stereographic_xy(site["latitude"], site["longitude"])
+        h = 1.0
+        gx = (synthetic_heights(x + h, y) - synthetic_heights(x - h, y)) / (2 * h)
+        gy = (synthetic_heights(x, y + h) - synthetic_heights(x, y - h)) / (2 * h)
+        analytic = math.degrees(math.atan(math.hypot(gx, gy)))
+        # A plane fitted over a 1 km disc approximates the point gradient of this smooth surface.
+        assert terrain["slopeDeg"] == pytest.approx(analytic, abs=0.5)
+        assert terrain["elevationM"] == pytest.approx(float(synthetic_heights(x, y)), abs=5.0)
+        assert terrain["roughnessM"] >= 0
+    assert validate_scenario(scenario) == []
