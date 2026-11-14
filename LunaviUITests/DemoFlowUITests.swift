@@ -16,9 +16,13 @@ final class DemoFlowUITests: XCTestCase {
         app.launchArguments = ["-uiTesting"]
         app.launch()
 
+        // 0. The app must be running in the foreground before its accessibility tree is queried.
+        //    (Querying too early on a cold simulator fails with kAXErrorServerNotFound.)
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 60), "Step 0: app did not reach the foreground (state \(app.state.rawValue))")
+
         // 1–3. Launch, original plan displayed, both conditions available.
         let combinedStatus = element(app, "inspector.combinedStatus")
-        XCTAssertTrue(combinedStatus.waitForExistence(timeout: 15), "Step 1: inspector did not appear")
+        XCTAssertTrue(combinedStatus.waitForExistence(timeout: 60), "Step 1: inspector did not appear")
         XCTAssertTrue(combinedStatus.label.contains("Requirements Met"), "Step 1 combined status: \(combinedStatus.label)")
         let sunlight = element(app, "condition.sunlight")
         XCTAssertTrue(sunlight.label.contains("Available"), "Step 2 sunlight card: \(sunlight.label)")
