@@ -38,7 +38,8 @@ def kernel_paths() -> list[str]:
 
 @pytest.fixture(scope="session")
 def spice():
-    import spiceypy
+    # Missing dependency = environment problem, not a code failure: skip with the reason.
+    spiceypy = pytest.importorskip("spiceypy", reason="spiceypy is not installed in this Python; run scripts/run_tests.sh (uses .venv)")
 
     paths = kernel_paths()
     spiceypy.kclear()

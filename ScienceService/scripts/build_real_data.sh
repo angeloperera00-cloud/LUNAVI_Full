@@ -120,8 +120,12 @@ if ! python -m lunavi_science horizons-check --scenario "out/$NAME.json" --kerne
     echo "Note: the Horizons check did not pass or could not run; the scenario stays marked 'not validated'."
 fi
 
-# 7. Install into the app (other ComputedScenario*.json files already there are kept)
+# 7. Validate against the app schema, print the acceptance scenarios, then install into the app
+#    (other ComputedScenario*.json files already there are kept; the app copy is identical to out/)
+python -m lunavi_science validate --scenario "out/$NAME.json" || { echo "Scenario failed validation; not installed."; exit 1; }
+python -m lunavi_science acceptance --scenario "out/$NAME.json" || true
 cp "out/$NAME.json" out/computed_south_pole_basemap.jpg ../Lunavi/Resources/
+cmp -s "out/$NAME.json" "../Lunavi/Resources/$NAME.json" && echo "App copy matches out/$NAME.json"
 echo
 echo "Done. Installed Lunavi/Resources/$NAME.json. Rebuild the app in Xcode (Product > Clean Build Folder, then Run)."
 echo "Bundled computed ranges:"; ls ../Lunavi/Resources/ComputedScenario*.json

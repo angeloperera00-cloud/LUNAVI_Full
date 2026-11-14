@@ -82,9 +82,14 @@ struct TimelineHeader: View {
     private var cursorReadout: some View {
         if let cursor = model.cursor {
             HStack(spacing: LunaviSpacing.s) {
+                // The cursor is an inspection time only; the mission start is set in the inspector.
+                Text("Inspecting")
+                    .font(LunaviTypography.micro)
+                    .foregroundStyle(LunaviColors.textMuted)
                 Text("\(UTCFormat.dayMonthTime(cursor)) UTC")
                     .font(LunaviTypography.measurementSmall)
                     .foregroundStyle(LunaviColors.selectedTime)
+                    .accessibilityLabel("Inspection time \(UTCFormat.spoken(cursor)), not the mission start")
                 stateChip(.sunlight, model.cursorSun)
                 stateChip(.earthLineOfSight, model.cursorEarth)
             }

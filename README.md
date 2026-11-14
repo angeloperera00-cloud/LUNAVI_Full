@@ -159,40 +159,43 @@ The full method, criteria, assumptions, limitations, provenance and validation s
 
 ## Verification status
 
+Full details, with where each check ran, are in [`docs/VALIDATION.md`](docs/VALIDATION.md); the method and data
+provenance are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
+
 | Check | Status |
 |---|---|
-| Python pipeline tests (53): interval logic against the app's fixture, horizons on analytic terrain, end-to-end build on a synthetic DEM, API, schema | **Passed** on Linux, Python 3.13, using NAIF DE421 lunar kernels |
-| SPICE Sun/Earth directions vs an independent implementation (Skyfield, same DE421 kernels) | Agree within 0.001° (measured: < 0.00003°) |
-| UTC→TDB fallback (used when no leapseconds kernel is loaded) vs Skyfield | Agrees within 0.02 ms |
-| Swift app build, unit tests, UI test, previews, screenshots | **Not run yet.** Written without access to Xcode. Run the commands above on a Mac |
-| Pipeline on real LOLA DEMs | **Not run yet.** NASA data hosts were not reachable from the build environment |
-| JPL Horizons comparison (`horizons-check`) | **Not run yet.** Same reason; the request format for `coord@301` still needs confirming |
-| Horizon masks vs PGDA product 69 | **Not implemented** |
+| Python pipeline tests (97) | **Passed** (Linux, Python 3.13, DE421 kernels). Without `spiceypy` installed, 21 are skipped with a reason. Run `sh ScienceService/scripts/run_tests.sh` |
+| SPICE Sun/Earth directions vs Skyfield and vs JPL Horizons | **Validated**: < 0.001° and < 0.0001° |
+| Pipeline on real LOLA DEMs (17 Nov – 1 Dec 2026) | **Run** on the developer Mac; bundled as `ComputedScenario.json`. Rebuild for schema 3 (terrain) |
+| Swift build and unit tests | Built on the developer Mac; one test-data error found and fixed; re-run pending |
+| Swift UI test | Failure step still to be identified |
+| Terrain horizon vs PGDA product 69 | **Not validated** |
 
 ---
 
 ## Implemented / not implemented
 
 **Implemented**
-- Mission workspace: map with pan, pinch and fit; site pins; inspector with condition cards and combined status; visibility timeline with failure markers and scrubbing.
-- Mission Rescue: simulate delay → impact → Explain This Change → recovery options → preview → apply → reset.
-- Data & Method, Site Explorer, Scientific Sensitivity (unavailable state in simulated mode), data-mode badge, validation records.
-- Layout: compact layout below 900 pt (inspector in a sheet); VoiceOver labels, adjustable timeline, Dynamic Type-aware styles.
-- Science pipeline: DEM horizons, SPICE geometry, bisected transitions (±30 s), coverage from DEM completeness, demo-case search, sensitivity variants, basemap, schema validation, Horizons check, FastAPI service.
+- Mission workspace: map, site pins, inspector, visibility timeline, Mission Rescue (delay → impact → explanation → recovery options → preview → apply → reset).
+- Lunar Shadow Analysis (Sun/Earth geometry, 360° terrain horizon, clearances at the timeline's inspection time).
+- Site Comparison (same UTC window for every site; preview vs Use for Plan).
+- Earth Visibility Windows (windows, obstructions, no-data stretches, next window; select to focus the timeline).
+- Mission Report: multi-page PDF built from the app's state, with preview, share and save.
+- Beginner tutorial (12 steps; opens once on first launch; Help reopens it).
+- Computed date ranges: kernel and DEM coverage checks; several bundled ranges; start times limited to computed coverage.
+- Experimental Solar Power Estimate and Terrain Characteristics (elevation, slope, roughness).
 
 **Not implemented**
-- On-demand computation for arbitrary coordinates. The service serves precomputed results and refuses other locations rather than guessing.
-- Automated comparison with PGDA product 69.
-- Light appearance: the app is dark only, although light-mode colour tokens exist.
-- 3D terrain, export, saved scenarios.
+- On-demand computation for arbitrary coordinates (the service refuses rather than guessing).
+- Comparison with PGDA product 69; landing-hazard modelling; radio-link modelling; light appearance.
 
 ---
 
 ## Limitations
 
-- Visibility is geometric only. LUNAVI does not model power, thermal limits, radio links, DSN scheduling or landing safety. Do not use it for operational planning.
-- Horizon accuracy is limited by DEM resolution and interpolation; about 90 % of PGDA product 78 pixels are interpolated.
-- The simulated fixture's dates sit inside the real November 2026 Earth-visibility period at the pole, but its obstruction times are illustrative.
+- Earth line of sight is geometric only — not a radio link. Sunlight visibility is not usable power; the power figure is an experimental estimate from user assumptions. Slope and roughness characterise the DEM; they do not certify landing safety.
+- Horizon accuracy is limited by DEM resolution and interpolation (about 90 % of PGDA product 78 pixels are interpolated); the terrain horizon is not independently validated.
+- Results exist only for computed periods; outside them the app shows Unknown. Not a NASA product; not for operational planning.
 
 ---
 

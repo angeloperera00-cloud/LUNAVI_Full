@@ -50,6 +50,13 @@ def main(argv=None) -> int:
     shadow.add_argument("--time", help="ISO 8601 UTC, e.g. 2026-11-29T15:00:00Z")
     shadow.add_argument("--condition", default="sunlight", choices=["sunlight", "earthLineOfSight"])
 
+    acc = sub.add_parser("acceptance", help="evaluate acceptance scenarios A–D on a scenario file with the app's rules")
+    acc.add_argument("--scenario", required=True)
+    acc.add_argument("--site", default="pgda78-site01")
+    acc.add_argument("--start", default="2026-11-29T15:00:00Z")
+    acc.add_argument("--hours", type=float, default=24)
+    acc.add_argument("--json", action="store_true")
+
     validate = sub.add_parser("validate", help="check a scenario file against the app schema")
     validate.add_argument("--scenario", required=True)
 
@@ -133,6 +140,13 @@ def main(argv=None) -> int:
         print(f"  {event['summary']}")
         for r in example["readings"]:
             print("  " + format_reading(r))
+        return 0
+
+    if args.command == "acceptance":
+        from .acceptance import format_report, run
+        with open(args.scenario) as f:
+            result = run(json.load(f), args.site, args.start, args.hours)
+        print(json.dumps(result, indent=2) if args.json else format_report(result))
         return 0
 
     if args.command == "validate":

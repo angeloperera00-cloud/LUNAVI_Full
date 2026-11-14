@@ -120,12 +120,19 @@ struct ShadowAnalysisView: View {
         PanelCard {
             VStack(alignment: .leading, spacing: LunaviSpacing.s) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("Time (UTC)").lunaviSectionLabel()
+                    Text("Inspection time (UTC)").lunaviSectionLabel()
                     Spacer()
                     Text(UTCFormat.full(time))
                         .font(LunaviTypography.measurement)
                         .foregroundStyle(LunaviColors.selectedTime)
                         .accessibilityIdentifier("shadow.time")
+                }
+                if let plan = store.focusEvaluation?.plan ?? store.committedPlan {
+                    Text("Timeline cursor — moving it does not change the mission. Mission start: \(UTCFormat.full(plan.start)) for \(plan.durationHours) h.")
+                        .font(LunaviTypography.caption)
+                        .foregroundStyle(LunaviColors.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("shadow.missionStart")
                 }
                 if let range = timeRange {
                     Slider(
