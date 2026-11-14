@@ -97,19 +97,42 @@ final class DemoFlowUITests: XCTestCase {
         XCTAssertFalse(element(app, "comparison.delayed").exists, "Step 14: delayed card still visible after reset")
     }
 
-    /// Taps once the element can receive touches. A sheet that is still settling (or a button under the
-    /// iOS 27 glass navigation bar) can exist but not be hittable yet; waiting avoids a flaky "Failed to tap".
-    /// If it never becomes hittable, the tap goes to the element's centre, and the next assertion checks
-    /// that the tap really worked — no check is skipped.
+    /// Taps an element the way a person would: if it is off-screen or hidden under the pinned footer of
+    /// the inspector, scroll the inspector a little and try again; tap only once it is hittable.
+    /// Every check after a tap is unchanged, so a tap that did not work still fails the test.
     @MainActor
     private func tapWhenReady(_ element: XCUIElement, step: String, timeout: TimeInterval = 10) {
         XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(step): \(element.identifier) not found")
-        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: element)
-        if XCTWaiter().wait(for: [hittable], timeout: timeout) == .completed {
-            element.tap()
-        } else {
-            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let inspector = XCUIApplication().descendants(matching: .any)["inspector"].firstMatch
+        for attempt in 0..<6 {
+            let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: element)
+            if XCTWaiter().wait(for: [hittable], timeout: attempt == 0 ? 2 : 1) == .completed, isClearOfFooter(element) {
+                element.tap()
+                return
+            }
+            // Scroll the inspector content up by about a quarter of its height.
+            if inspector.exists {
+                let from = inspector.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+                let to = inspector.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+                from.press(forDuration: 0.05, thenDragTo: to)
+            }
         }
+        XCTFail("\(step): \(element.identifier) never became tappable (not hittable or under the inspector footer)")
+    }
+
+    /// False when the element's centre lies inside the pinned inspector footer (primary action area).
+    @MainActor
+    private func isClearOfFooter(_ element: XCUIElement) -> Bool {
+        let app = XCUIApplication()
+        let footerButtons = ["action.simulateDelay", "action.findRecovery", "action.apply", "action.clearPreview", "action.acceptDelayed"]
+        let centre = CGPoint(x: element.frame.midX, y: element.frame.midY)
+        for id in footerButtons where id != element.identifier {
+            let footer = app.buttons[id]
+            if footer.exists, footer.frame.insetBy(dx: 0, dy: -24).contains(centre) {
+                return false
+            }
+        }
+        return true
     }
 
     @MainActor
