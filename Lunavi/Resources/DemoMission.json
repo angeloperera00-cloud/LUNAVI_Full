@@ -1,0 +1,21 @@
+{
+  "mission": {
+    "missionName": "LUNAVI South Pole Demonstration",
+    "siteID": "demo-point-a",
+    "start": "2026-11-20T06:00:00Z",
+    "durationHours": 24,
+    "delayHours": 6,
+    "durationOptions": [6, 12, 24, 48]
+  },
+  "basemap": {
+    "imageResource": "illustrative_south_pole_terrain",
+    "imageExtension": "jpg",
+    "isIllustrative": true,
+    "title": "Illustrative terrain",
+    "attribution": "Procedurally generated for the LUNAVI demo (Tools/generate_illustrative_assets.py). Not NASA data, not georeferenced, not to scale.",
+    "pixelWidth": 3072,
+    "pixelHeight": 3072,
+    "metersPerPixel": null,
+    "projection": null
+  }
+}

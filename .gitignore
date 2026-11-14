@@ -1,0 +1,22 @@
+# Xcode
+build/
+DerivedData/
+*.xcresult
+xcuserdata/
+*.xcuserstate
+Screenshots/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Science pipeline inputs/outputs (large or user-specific)
+ScienceService/kernels/
+ScienceService/data/
+ScienceService/out/
+ScienceService/config/sites.json

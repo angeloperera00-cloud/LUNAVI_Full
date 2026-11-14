@@ -1,0 +1,18 @@
+# LUNAVI science pipeline (Python 3.11+)
+numpy>=1.26
+scipy>=1.11
+spiceypy>=6.0
+rasterio>=1.3      # wheels bundle GDAL
+pyproj>=3.6
+pillow>=10.0
+pyshp>=2.3         # reads the PGDA 78 region shapefiles
+truststore>=0.9    # HTTPS through the macOS Keychain (Horizons check behind inspecting proxies)
+
+# Optional live service
+fastapi>=0.110
+uvicorn>=0.27
+
+# Tests
+pytest>=8.0
+httpx>=0.27        # FastAPI TestClient
+skyfield>=1.48     # independent ephemeris cross-check (tests only)

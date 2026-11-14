@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "id": "lunavi-simulated-demo-2026-11",
+    "title": "LUNAVI simulated demo scenario (November 2026)",
+    "source": "simulatedFixture",
+    "generatedAt": null,
+    "timeStepSeconds": null,
+    "observerHeightMeters": null,
+    "minimumClearanceDeg": null,
+    "sunCriterion": "Not modelled — the fixture's sunlight intervals are illustrative.",
+    "earthCriterion": "Not modelled — the fixture's Earth line-of-sight intervals are illustrative.",
+    "referenceFrame": "Not applicable — no geometry is computed in simulated mode.",
+    "ephemeris": "Not applicable — no geometry is computed in simulated mode.",
+    "assumptions": [
+      "All intervals are hand-authored, deterministic demo values in UTC.",
+      "Intervals are half-open [start, end): a window is covered only if the intervals contain every instant of it.",
+      "Outside each site's coverage the state is unknown and is never treated as visible.",
+      "The fixture's Earth intervals sit inside the period when Earth's disc is geometrically above a flat horizon at the south pole (about 17 Nov 01:00 to 30 Nov 14:00 UTC, 2026), computed with NAIF DE421 kernels; the obstruction times themselves are illustrative."
+    ],
+    "limitations": [
+      "Simulated values are not NASA-verified lunar predictions and must not be used for planning.",
+      "Map positions are illustrative and are not lunar coordinates; no distances are shown.",
+      "No terrain model is used, so no azimuth, elevation or horizon angles are available in this mode."
+    ],
+    "provenance": [
+      {
+        "id": "fixture",
+        "role": "Visibility intervals",
+        "name": "LUNAVI demo fixture",
+        "provider": "LUNAVI project",
+        "version": "2026-11-12",
+        "resolution": "Hourly boundaries",
+        "coordinateSystem": "UTC time only",
+        "status": "Bundled — illustrative values, not NASA data",
+        "link": null
+      },
+      {
+        "id": "terrain",
+        "role": "Terrain imagery",
+        "name": "Illustrative south-pole terrain",
+        "provider": "LUNAVI (procedurally generated)",
+        "version": "1 (seed 20261120)",
+        "resolution": "3072 × 3072 px, no ground scale",
+        "coordinateSystem": "Not georeferenced",
+        "status": "Bundled — illustrative placeholder",
+        "link": null
+      },
+      {
+        "id": "lola-site-dems",
+        "role": "Elevation (integration path)",
+        "name": "High-Resolution LOLA Topography for Lunar South Pole Sites (PGDA product 78)",
+        "provider": "NASA GSFC Planetary Geodynamics Data Archive",
+        "version": "Per-site updates 2021–2022 (Barker et al. 2021)",
+        "resolution": "5 m/pixel",
+        "coordinateSystem": "South polar stereographic, MOON_ME (DE421)",
+        "status": "Not bundled — use ScienceService",
+        "link": "https://pgda.gsfc.nasa.gov/products/78"
+      },
+      {
+        "id": "lola-regional-dems",
+        "role": "Elevation, far field (integration path)",
+        "name": "A New View of the Lunar South Pole from LOLA (PGDA product 90)",
+        "provider": "NASA GSFC Planetary Geodynamics Data Archive",
+        "version": "Barker et al. 2023, PSJ 4:183",
+        "resolution": "10–240 m/pixel",
+        "coordinateSystem": "South polar stereographic, MOON_ME (DE421)",
+        "status": "Not bundled — use ScienceService",
+        "link": "https://pgda.gsfc.nasa.gov/products/90"
+      },
+      {
+        "id": "spice",
+        "role": "Sun and Earth geometry (integration path)",
+        "name": "NAIF SPICE generic kernels (DE440 or DE421 set, lunar PA/ME frames)",
+        "provider": "NASA JPL NAIF",
+        "version": "See ScienceService/config/kernels.example.tm",
+        "resolution": "—",
+        "coordinateSystem": "MOON_ME",
+        "status": "Not used in simulated mode",
+        "link": "https://naif.jpl.nasa.gov/naif/data_generic.html"
+      },
+      {
+        "id": "horizons",
+        "role": "Independent ephemeris check (integration path)",
+        "name": "JPL Horizons API",
+        "provider": "NASA JPL Solar System Dynamics",
+        "version": "API v1.3",
+        "resolution": "—",
+        "coordinateSystem": "Topocentric az/el on the Moon",
+        "status": "Not used in simulated mode",
+        "link": "https://ssd-api.jpl.nasa.gov/doc/horizons.html"
+      }
+    ],
+    "validation": [
+      {
+        "id": "fixture",
+        "component": "All visibility values",
+        "level": "notApplicable",
+        "detail": "Simulated fixture — illustrative values, not NASA-verified predictions."
+      }
+    ],
+    "disclaimer": "Simulated demo — illustrative conditions. Not a NASA prediction or product."
+  },
+  "sites": [
+    {
+      "siteID": "demo-point-a",
+      "coverage": [
+        { "start": "2026-11-19T06:00:00Z", "end": "2026-11-22T06:00:00Z" },
+        { "start": "2026-11-24T00:00:00Z", "end": "2026-11-27T00:00:00Z" }
+      ],
+      "sunlight": [
+        { "start": "2026-11-19T06:00:00Z", "end": "2026-11-21T08:00:00Z" },
+        { "start": "2026-11-25T12:00:00Z", "end": "2026-11-27T00:00:00Z" }
+      ],
+      "earthLineOfSight": [
+        { "start": "2026-11-19T06:00:00Z", "end": "2026-11-22T06:00:00Z" },
+        { "start": "2026-11-24T00:00:00Z", "end": "2026-11-27T00:00:00Z" }
+      ],
+      "events": [
+        {
+          "id": "a-sun-obstruction",
+          "condition": "sunlight",
+          "kind": "obstructionBegins",
+          "time": "2026-11-21T08:00:00Z",
+          "summary": "In this simulated scenario the Sun drops below the local horizon at Demo Point A at 08:00 UTC on 21 Nov and stays obstructed until 12:00 UTC on 25 Nov.",
+          "geometry": null
+        },
+        {
+          "id": "a-sun-return",
+          "condition": "sunlight",
+          "kind": "visibilityReturns",
+          "time": "2026-11-25T12:00:00Z",
+          "summary": "In this simulated scenario sunlight returns to Demo Point A at 12:00 UTC on 25 Nov, and Earth stays geometrically visible.",
+          "geometry": null
+        }
+      ]
+    },
+    {
+      "siteID": "ridge-site-b",
+      "coverage": [
+        { "start": "2026-11-20T00:00:00Z", "end": "2026-11-22T00:00:00Z" }
+      ],
+      "sunlight": [
+        { "start": "2026-11-20T00:00:00Z", "end": "2026-11-22T00:00:00Z" }
+      ],
+      "earthLineOfSight": [
+        { "start": "2026-11-20T00:00:00Z", "end": "2026-11-22T00:00:00Z" }
+      ],
+      "events": []
+    }
+  ],
+  "sensitivity": null
+}

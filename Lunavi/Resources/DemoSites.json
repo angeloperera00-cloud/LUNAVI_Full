@@ -1,0 +1,88 @@
+{
+  "sites": [
+    {
+      "id": "demo-point-a",
+      "name": "Demo Point A",
+      "shortName": "Point A",
+      "kind": "illustrativeDemo",
+      "regionLabel": "Lunar South Pole (illustrative)",
+      "mapPosition": { "x": 0.46, "y": 0.53 },
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "Illustrative terrain only — no elevation model bundled for this site.",
+      "sourceNote": "Illustrative demo site. Its map position is illustrative and is not a lunar coordinate. Visibility values are simulated."
+    },
+    {
+      "id": "ridge-site-b",
+      "name": "Ridge Site B",
+      "shortName": "Site B",
+      "kind": "illustrativeDemo",
+      "regionLabel": "Lunar South Pole (illustrative) · demo alternative",
+      "mapPosition": { "x": 0.57, "y": 0.44 },
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "Illustrative terrain only — no elevation model bundled for this site.",
+      "sourceNote": "Illustrative demo alternative. Its map position is illustrative and is not a lunar coordinate. Visibility values are simulated."
+    },
+    {
+      "id": "demo-point-c",
+      "name": "Demo Point C",
+      "shortName": "Point C",
+      "kind": "illustrativeDemo",
+      "regionLabel": "Lunar South Pole (illustrative)",
+      "mapPosition": { "x": 0.33, "y": 0.66 },
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "No visibility data in the demo fixture — analysis unavailable.",
+      "sourceNote": "Illustrative site with no data, included to show the unavailable-data state."
+    },
+    {
+      "id": "pgda78-site01",
+      "name": "Connecting Ridge",
+      "shortName": "Site01",
+      "kind": "publishedCatalog",
+      "regionLabel": "Lunar South Pole",
+      "mapPosition": null,
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "5 m/pixel LOLA DEM available from NASA PGDA product 78 (Site01) — not bundled.",
+      "sourceNote": "Listed as Site01 (Connecting ridge) in NASA PGDA product 78, High-Resolution LOLA Topography for Lunar South Pole Sites; site numbering after Mazarico et al. (2011)."
+    },
+    {
+      "id": "pgda78-site04",
+      "name": "Shackleton Rim",
+      "shortName": "Site04",
+      "kind": "publishedCatalog",
+      "regionLabel": "Lunar South Pole",
+      "mapPosition": null,
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "5 m/pixel LOLA DEM available from NASA PGDA product 78 (Site04) — not bundled.",
+      "sourceNote": "Listed as Site04 (Shackleton rim) in NASA PGDA product 78; site numbering after Mazarico et al. (2011)."
+    },
+    {
+      "id": "pgda78-site11",
+      "name": "de Gerlache Rim",
+      "shortName": "Site11",
+      "kind": "publishedCatalog",
+      "regionLabel": "Lunar South Pole",
+      "mapPosition": null,
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "5 m/pixel LOLA DEM available from NASA PGDA product 78 (Site11) — not bundled.",
+      "sourceNote": "Listed as Site11 (de Gerlache rim) in NASA PGDA product 78; site numbering after Mazarico et al. (2011)."
+    },
+    {
+      "id": "pgda78-site23",
+      "name": "Malapert Massif",
+      "shortName": "Site23",
+      "kind": "publishedCatalog",
+      "regionLabel": "Lunar South Pole",
+      "mapPosition": null,
+      "coordinate": null,
+      "hasTerrainData": false,
+      "terrainDataNote": "5 m/pixel LOLA DEM available from NASA PGDA product 78 (Site23) — not bundled.",
+      "sourceNote": "Listed as Site23 (Malapert massif) in NASA PGDA product 78; site numbering after Mazarico et al. (2011)."
+    }
+  ]
+}

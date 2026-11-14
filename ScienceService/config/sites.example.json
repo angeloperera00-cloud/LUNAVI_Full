@@ -1,0 +1,112 @@
+{
+  "_readme": [
+    "Copy to config/sites.json and replace every null before running: python -m lunavi_science build --config config/sites.json --out out",
+    "Paths are relative to this file. The DEM paths below assume the files were downloaded into ScienceService/data/; /vsicurl/https://... URLs to the cloud-optimised GeoTIFFs listed on the PGDA product pages also work.",
+    "Site coordinates must come from a citable source, e.g. the region-of-interest shapefiles on the PGDA product 78 page (SiteXX_ROIs.tgz) or the Wueller et al. (2026) Landing_Sites shapefile (CC BY 4.0). The builder refuses sites without latitude, longitude and coordinateSource.",
+    "Latitude is planetocentric (negative south), longitude east-positive, both in the MOON_ME (DE421) frame of the LOLA products."
+  ],
+  "missionName": "LUNAVI South Pole Analysis",
+  "ephemerisLabel": "NAIF DE421 planetary ephemeris + MOON_ME (moon_080317.tf, moon_pa_de421_1900-2050.bpc)",
+  "kernels": [
+    "../kernels/naif0012.tls",
+    "../kernels/de421.bsp",
+    "../kernels/moon_pa_de421_1900-2050.bpc",
+    "../kernels/moon_080317.tf",
+    "../kernels/moon_assoc_me.tf"
+  ],
+  "dem": {
+    "_note": "Priority order: 5 m/pixel site tiles first (PGDA product 78; each covers about 16 x 16 km around one site), the regional DEM last (PGDA product 90) for the far horizon. boundsPaddingM limits what is read and must exceed model.maxDistanceM for the far-field layer; resolutionM averages the raster down on read to save memory.",
+    "layers": [
+      {
+        "name": "PGDA product 78 Site01 LDEM (5 m/pixel)",
+        "path": "../data/Site01_final_adj_5mpp_surf.tif",
+        "version": null,
+        "link": "https://pgda.gsfc.nasa.gov/products/78"
+      },
+      {
+        "name": "PGDA product 78 Site04 LDEM (5 m/pixel)",
+        "path": "../data/Site04_final_adj_5mpp_surf.tif",
+        "version": null,
+        "link": "https://pgda.gsfc.nasa.gov/products/78"
+      },
+      {
+        "name": "PGDA product 78 Site11 LDEM (5 m/pixel)",
+        "path": "../data/Site11_final_adj_5mpp_surf.tif",
+        "version": null,
+        "link": "https://pgda.gsfc.nasa.gov/products/78"
+      },
+      {
+        "name": "PGDA product 90 LDEM_80S_20MPP_ADJ (20 m/pixel)",
+        "path": "../data/LDEM_80S_20MPP_ADJ.TIF",
+        "version": null,
+        "link": "https://pgda.gsfc.nasa.gov/products/90",
+        "boundsPaddingM": 160000,
+        "resolutionM": 80
+      }
+    ]
+  },
+  "basemap": {
+    "_note": "Without hillshadePath the basemap is shaded relief rendered from the DEM layers. To use the product 90 hillshade instead, set hillshadePath to ../data/LDEM_80S_20MPP_ADJ_HILL.TIF (and hillshadeResolutionM, e.g. 40, to read it at lower resolution).",
+    "sizePx": 2048,
+    "marginM": 12000,
+    "hillshadePath": null
+  },
+  "period": {
+    "start": "2026-11-17T00:00:00Z",
+    "end": "2026-12-01T00:00:00Z",
+    "stepSeconds": 600
+  },
+  "model": {
+    "observerHeightM": 2.0,
+    "minimumClearanceDeg": 0.0,
+    "sunMinFraction": 0.5,
+    "maxDistanceM": 150000,
+    "azimuthStepDeg": 0.5,
+    "nearStepM": 10.0,
+    "sensitivityObserverHeightsM": [
+      10.0
+    ],
+    "sensitivityClearancesDeg": [
+      0.5
+    ]
+  },
+  "mission": {
+    "durationHours": 24,
+    "delayHours": 6,
+    "durationOptions": [
+      6,
+      12,
+      24,
+      48
+    ]
+  },
+  "sites": [
+    {
+      "id": "pgda78-site01",
+      "name": "Connecting Ridge",
+      "shortName": "Connecting Ridge",
+      "latitude": null,
+      "longitude": null,
+      "coordinateSource": null,
+      "sourceNote": "Site01 in PGDA product 78 (site numbering after Mazarico et al., 2011)."
+    },
+    {
+      "id": "pgda78-site04",
+      "name": "Shackleton Rim",
+      "shortName": "Shackleton Rim",
+      "latitude": null,
+      "longitude": null,
+      "coordinateSource": null,
+      "sourceNote": "Site04 in PGDA product 78 (site numbering after Mazarico et al., 2011)."
+    },
+    {
+      "id": "pgda78-site11",
+      "name": "de Gerlache Rim",
+      "shortName": "de Gerlache Rim",
+      "latitude": null,
+      "longitude": null,
+      "coordinateSource": null,
+      "sourceNote": "Site11 in PGDA product 78 (site numbering after Mazarico et al., 2011)."
+    }
+  ]
+}
