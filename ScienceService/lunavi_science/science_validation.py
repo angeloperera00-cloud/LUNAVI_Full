@@ -58,6 +58,7 @@ class Context:
     times: list
     ets: list
     scenario: dict
+    resolve: object = None
 
 
 def load_context(config_path: str, scenario_path: str, spice) -> Context:
@@ -79,7 +80,7 @@ def load_context(config_path: str, scenario_path: str, spice) -> Context:
     layers = _load_layers(cfg, resolve, cfg["sites"])
     times = time_grid(s.start, s.end, s.step_s)
     ets = [utc_to_et(t, spice) for t in times]
-    return Context(cfg, s, layers, DemSampler(layers), cfg["sites"], times, ets, scenario)
+    return Context(cfg, s, layers, DemSampler(layers), cfg["sites"], times, ets, scenario, resolve)
 
 
 def _scenario_sites(ctx) -> tuple[str, str]:
@@ -273,7 +274,8 @@ def cases_section(spice, ctx: Context, use_horizons: bool = True) -> dict:
         picks = []
         for condition, key in (("sunlight", "sun"), ("earthLineOfSight", "earth")):
             tr = g["samples"][key]
-            az, el, rad = (np.asarray(tr[k], dtype=float) for k in ("azimuthDeg", "elevationDeg", "angularRadiusDeg"))
+            # The last sample is the period end itself; coverage is half-open, so it is (correctly) unknown. Skip it.
+            az, el, rad = (np.asarray(tr[k], dtype=float)[:-1] for k in ("azimuthDeg", "elevationDeg", "angularRadiusDeg"))
             clearance = el - mask.at(az)
             edge = clearance - (0.0 if condition == "sunlight" else -rad)  # distance to the criterion line
             label = "Sun" if condition == "sunlight" else "Earth"
@@ -303,7 +305,7 @@ def cases_section(spice, ctx: Context, use_horizons: bool = True) -> dict:
             if use_horizons:
                 try:
                     from .horizons_check import query_azel
-                    rows_h = query_azel(lat, lon, (mask.surface_height_m + s.observer_height_m) / 1000.0, "10" if target == "SUN" else "399",
+                    rows_h = query_azel(lat, lon, (mask.surface_height_m + s.observer_height_m) / 1000.0, target,
                                         moment, moment + dt.timedelta(minutes=1), "1m")
                     if rows_h:
                         _, h_az, h_el = rows_h[0]
@@ -479,16 +481,28 @@ def sensitivity_section(spice, ctx: Context, variants: Optional[list] = None) ->
         ("observer 10 m", {"observer_height_m": 10.0}),
         ("azimuth step 0.25°", {"azimuth_step_deg": 0.25}), ("azimuth step 1°", {"azimuth_step_deg": 1.0}),
         ("search radius 100 km", {"max_distance_m": 100_000.0}),
+        ("search radius 250 km", {"max_distance_m": 250_000.0}),
         ("sampling 300 s", {"step_s": 300.0}),
         ("Sun: any part of disc", {"sun_min_fraction": 0.0}), ("Sun: whole disc", {"sun_min_fraction": 1.0}),
         ("clearance +0.1°", {"min_clearance_deg": 0.1}),
     ]
     scen = _scenario_list(ctx)
 
+    def sampler_for(settings):
+        """Reload the far-field layer with a larger window when the search radius exceeds the configured padding."""
+        pads = [float(L.get("boundsPaddingM") or 0) for L in ctx.cfg["dem"]["layers"]]
+        if not pads or settings.max_distance_m + 10_000 <= max(pads):
+            return ctx.sampler
+        layers_cfg = [dict(L, boundsPaddingM=settings.max_distance_m + 10_000) if L.get("boundsPaddingM") else L
+                      for L in ctx.cfg["dem"]["layers"]]
+        cfg2 = dict(ctx.cfg, dem=dict(ctx.cfg["dem"], layers=layers_cfg))
+        return DemSampler(_load_layers(cfg2, ctx.resolve, ctx.sites))
+
     def run(settings) -> dict:
         times = time_grid(settings.start, settings.end, settings.step_s)
         ets = [utc_to_et(t, spice) for t in times]
-        comps = {site["id"]: compute_site(spice, ctx.sampler, site, settings, times, ets) for site in ctx.sites}
+        sampler = sampler_for(settings)
+        comps = {site["id"]: compute_site(spice, sampler, site, settings, times, ets) for site in ctx.sites}
         data = {k: iv.SiteData(k, c.coverage, c.sunlight, c.earth) for k, c in comps.items()}
         return {"comps": comps, "data": data}
 
@@ -504,25 +518,33 @@ def sensitivity_section(spice, ctx: Context, variants: Optional[list] = None) ->
         except Exception as error:
             out["variants"][label] = {"error": str(error)[:200]}
             continue
-        shifts, unmatched = [], 0
+        shifts, unmatched, largest = [], 0, None
         for sid, comp in res["comps"].items():
             b = base["comps"][sid]
             for attr in ("sunlight", "earth"):
-                for t in _transitions(getattr(b, attr)):
-                    if t in (s0.start, s0.end) or not getattr(comp, attr):
-                        continue
-                    cand = _transitions(getattr(comp, attr))
-                    nearest = min(cand, key=lambda x: abs((x - t).total_seconds())) if cand else None
-                    if nearest is None or abs((nearest - t).total_seconds()) > 6 * 3600:
-                        unmatched += 1
-                    else:
-                        shifts.append(abs((nearest - t).total_seconds()) / 60.0)
+                for edge in (0, 1):  # 0 = visibility returns (interval start), 1 = obstruction begins (interval end)
+                    base_t = sorted(r[edge] for r in getattr(b, attr))
+                    var_t = sorted(r[edge] for r in getattr(comp, attr))
+                    for t in base_t:
+                        if t in (s0.start, s0.end):
+                            continue  # period boundaries are not transitions
+                        cand = [x for x in var_t if x not in (settings.start, settings.end)]
+                        nearest = min(cand, key=lambda x: abs((x - t).total_seconds())) if cand else None
+                        if nearest is None or abs((nearest - t).total_seconds()) > 12 * 3600:
+                            unmatched += 1
+                            continue
+                        shift = (nearest - t).total_seconds() / 60.0
+                        shifts.append(abs(shift))
+                        if largest is None or abs(shift) > abs(largest["shiftMin"]):
+                            largest = {"site": sid, "condition": attr, "kind": "returns" if edge == 0 else "obstructed",
+                                       "baseline": iso(t), "variant": iso(nearest), "shiftMin": _r(shift, 1)}
         statuses = {key: iv.evaluate(res["data"][sid], sid, parse_utc(start), hours).overall
                     for key, sid, start, hours in scen if sid in res["data"]}
         out["variants"][label] = {
             "maxTransitionShiftMin": _r(max(shifts), 1) if shifts else 0.0,
             "medianTransitionShiftMin": _r(float(np.median(shifts)), 1) if shifts else 0.0,
             "transitionsWithoutCounterpart": unmatched,
+            "largestShift": largest,
             "scenarioStatus": statuses,
             "statusChanges": {k: f"{out['baseline'][k]} → {v}" for k, v in statuses.items() if out["baseline"].get(k) != v},
         }
@@ -623,12 +645,14 @@ def format_markdown(r: dict) -> str:
         L += ["## 5. Mission Rescue vs brute force", "", "```", json.dumps(r["rescue"], indent=2, default=str), "```", ""]
     if "sensitivity" in r:
         L += ["## 6. Sensitivity", "", f"Baseline statuses: {r['sensitivity']['baseline']}", "",
-              "| Variant | Max transition shift (min) | Median (min) | Unmatched transitions | Status changes |", "|---|---|---|---|---|"]
+              "| Variant | Max transition shift (min) | Median (min) | Unmatched transitions | Largest shift | Status changes |", "|---|---|---|---|---|---|"]
         for k, v in r["sensitivity"]["variants"].items():
             if "error" in v:
-                L.append(f"| {k} | error: {v['error']} | | | |")
+                L.append(f"| {k} | error: {v['error']} | | | | |")
                 continue
-            L.append(f"| {k} | {v['maxTransitionShiftMin']} | {v['medianTransitionShiftMin']} | {v['transitionsWithoutCounterpart']} | "
+            g = v.get("largestShift") or {}
+            detail = f"{g.get('site')} {g.get('condition')} {g.get('kind')} {g.get('baseline')} → {g.get('variant')}" if g else ""
+            L.append(f"| {k} | {v['maxTransitionShiftMin']} | {v['medianTransitionShiftMin']} | {v['transitionsWithoutCounterpart']} | {detail} | "
                      f"{v['statusChanges'] or 'none'} |")
         L.append("")
     return "\n".join(L)

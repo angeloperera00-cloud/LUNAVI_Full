@@ -86,3 +86,27 @@ def test_disc_fraction_equals_numerically_integrated_area():
         # Centre at d radii above the horizon line: visible where y > -d.
         numeric = getattr(np, "trapezoid", getattr(np, "trapz", None))(np.where(y > -d, width, 0.0), y) / np.pi
         assert abs(float(disc_fraction_visible(d, 0.0, 1.0)) - numeric) < 1e-5, d
+
+
+def test_cases_query_horizons_with_target_names_and_skip_the_period_end(built, spice, monkeypatch):  # noqa: F811
+    """Regression: the Horizons helper takes 'SUN'/'EARTH'; the period-end instant (unknown by design) is not a case."""
+    import lunavi_science.horizons_check as hc
+    from lunavi_science.ephemeris import site_vector_km, target_azel
+    from lunavi_science.science_validation import cases_section
+    from lunavi_science.timeutil import utc_to_et
+
+    def fake_query(lat, lon, alt_km, target, start, stop, step):
+        assert target in ("SUN", "EARTH")
+        position = site_vector_km(lat, lon, 1737.4 + alt_km)
+        az, el, _ = target_azel(spice, target, [utc_to_et(start, spice)], position)
+        return [(start, float(az[0]), float(el[0]))]
+
+    monkeypatch.setattr(hc, "query_azel", fake_query)
+    work, _, _ = built
+    ctx = load_context(str(work / "config.json"), str(work / "out" / "ComputedScenario.json"), spice)
+    result = cases_section(spice, ctx, use_horizons=True)
+    for e in result["sites"].values():
+        for c in e["cases"]:
+            if "azimuthDeg" in c:
+                assert c["utc"] != "2026-11-30T00:00:00Z"
+                assert abs(c["horizonsDeltaAzDeg"]) < 1e-4 and abs(c["horizonsDeltaElDeg"]) < 1e-4
