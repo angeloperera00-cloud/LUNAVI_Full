@@ -8,8 +8,9 @@ struct MissionInspectorView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        // The footer is a bottom safe-area inset of the scroll view, so the last controls (e.g. Compare
-        // Sites) can always be scrolled fully above the pinned primary action instead of ending under it.
+        // The footer sits below the scroll view (never on top of it), so no control can be covered by it.
+        // Extra bottom padding lets the last controls scroll fully clear of the footer edge.
+        VStack(spacing: 0) {
         ScrollView {
                 VStack(alignment: .leading, spacing: LunaviSpacing.l) {
                     InspectorHeaderView()
@@ -30,12 +31,12 @@ struct MissionInspectorView: View {
                     LandingTerrainView(siteID: store.focusSiteID)
                 }
                 .padding(.horizontal, LunaviSpacing.l + 2)
-                .padding(.vertical, LunaviSpacing.l)
+                .padding(.top, LunaviSpacing.l)
+                .padding(.bottom, LunaviSpacing.xxl)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.phase)
         }
         .scrollIndicators(.visible)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            InspectorFooterView()
+        InspectorFooterView()
         }
         .background(LunaviColors.backgroundSecondary)
         .accessibilityElement(children: .contain)

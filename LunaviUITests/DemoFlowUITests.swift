@@ -97,8 +97,8 @@ final class DemoFlowUITests: XCTestCase {
         XCTAssertFalse(element(app, "comparison.delayed").exists, "Step 14: delayed card still visible after reset")
     }
 
-    /// Taps an element the way a person would: if it is off-screen or hidden under the pinned footer of
-    /// the inspector, scroll the inspector a little and try again; tap only once it is hittable.
+    /// Taps an element the way a person would: if it is off-screen or right at the edge of the inspector
+    /// footer, scroll the inspector and try again; tap only once it is hittable and clear of the footer.
     /// Every check after a tap is unchanged, so a tap that did not work still fails the test.
     @MainActor
     private func tapWhenReady(_ element: XCUIElement, step: String, timeout: TimeInterval = 10) {
@@ -110,11 +110,11 @@ final class DemoFlowUITests: XCTestCase {
                 element.tap()
                 return
             }
-            // Scroll the inspector content up by about a quarter of its height.
+            // Bring it into view: scroll the inspector (or, if it is not visible, the whole window).
             if inspector.exists {
-                let from = inspector.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
-                let to = inspector.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
-                from.press(forDuration: 0.05, thenDragTo: to)
+                inspector.swipeUp(velocity: .slow)
+            } else {
+                XCUIApplication().swipeUp(velocity: .slow)
             }
         }
         XCTFail("\(step): \(element.identifier) never became tappable (not hittable or under the inspector footer)")
