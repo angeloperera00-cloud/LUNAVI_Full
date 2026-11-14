@@ -57,6 +57,14 @@ def main(argv=None) -> int:
     acc.add_argument("--hours", type=float, default=24)
     acc.add_argument("--json", action="store_true")
 
+    vs = sub.add_parser("validate-science", help="independent horizon, PGDA 69, cases, decisions, rescue, sensitivity")
+    vs.add_argument("--config", required=True)
+    vs.add_argument("--scenario", required=True)
+    vs.add_argument("--out", default="../docs/validation_results")
+    vs.add_argument("--sections", nargs="+", default=None,
+                    choices=["horizon", "pgda69", "cases", "decisions", "rescue", "sensitivity"])
+    vs.add_argument("--no-network", action="store_true", help="skip PGDA 69 download and JPL Horizons queries")
+
     validate = sub.add_parser("validate", help="check a scenario file against the app schema")
     validate.add_argument("--scenario", required=True)
 
@@ -140,6 +148,12 @@ def main(argv=None) -> int:
         print(f"  {event['summary']}")
         for r in example["readings"]:
             print("  " + format_reading(r))
+        return 0
+
+    if args.command == "validate-science":
+        from .science_validation import run_all
+        result = run_all(args.config, args.scenario, args.out, sections=args.sections, use_network=not args.no_network)
+        print(f"Wrote {args.out}/validation_results.md and .json ({', '.join(k for k in result if k in ('horizon','pgda69','cases','decisions','rescue','sensitivity'))})")
         return 0
 
     if args.command == "acceptance":

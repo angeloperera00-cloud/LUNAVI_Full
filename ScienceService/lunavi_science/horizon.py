@@ -67,7 +67,9 @@ def ray_distances(near_step_m: float, max_distance_m: float, far_samples: int = 
 
 def compute_horizon(sampler, lat_deg: float, lon_deg: float, observer_height_m: float,
                     azimuth_step_deg: float = 0.5, max_distance_m: float = 150_000.0, near_step_m: float = 10.0,
-                    radius_m: float = LUNAR_RADIUS_M, surface_height_m: Optional[float] = None) -> HorizonMask:
+                    radius_m: float = LUNAR_RADIUS_M, surface_height_m: Optional[float] = None,
+                    min_distance_m: float = 0.0) -> HorizonMask:
+    """`min_distance_m` > 0 ignores terrain closer than that (used only by the validation cross-check)."""
     if surface_height_m is None:
         surface_height_m = float(sampler.sample_latlon(np.array([lat_deg]), np.array([lon_deg]))[0])
         if np.isnan(surface_height_m):
@@ -76,6 +78,8 @@ def compute_horizon(sampler, lat_deg: float, lon_deg: float, observer_height_m: 
 
     azimuths = np.arange(0.0, 360.0, azimuth_step_deg)
     distances = ray_distances(near_step_m, max_distance_m)
+    if min_distance_m > 0:
+        distances = distances[distances >= min_distance_m]
     theta = distances / radius_m
     lat, lon = ray_points(lat_deg, lon_deg, azimuths, theta)
     heights = sampler.sample_latlon(lat.ravel(), lon.ravel()).reshape(lat.shape)
