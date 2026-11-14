@@ -38,7 +38,7 @@ final class DemoFlowUITests: XCTestCase {
         let simulate = app.buttons["action.simulateDelay"]
         XCTAssertTrue(simulate.waitForExistence(timeout: 5), "Step 4: Simulate Delay button not found")
         XCTAssertTrue(simulate.label.contains("Simulate +6h Delay"), "Step 4 button label: \(simulate.label)")
-        simulate.tap()
+        tapWhenReady(simulate, step: "Step 4")
         XCTAssertTrue(element(app, "comparison.delayed").waitForExistence(timeout: 5), "Step 5: delayed scenario card did not appear")
         XCTAssertTrue(element(app, "comparison.original").exists, "Step 5: original scenario card missing")
         let delayedSunlight = element(app, "condition.sunlight")
@@ -54,18 +54,20 @@ final class DemoFlowUITests: XCTestCase {
         // 7. Explain This Change.
         let explain = app.buttons["action.explain"]
         XCTAssertTrue(explain.waitForExistence(timeout: 5), "Step 7: Explain This Change button not found")
-        explain.tap()
+        tapWhenReady(explain, step: "Step 7")
         XCTAssertTrue(element(app, "explain.whatChanged").waitForExistence(timeout: 5), "Step 7: Explain sheet did not open")
         XCTAssertTrue(element(app, "explain.why").exists, "Step 7: 'Why' section missing")
-        app.buttons["explain.done"].tap()
+        let done = app.buttons["explain.done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "Step 7: Done button not found in the Explain sheet")
+        tapWhenReady(done, step: "Step 7 (close Explain)")
         XCTAssertTrue(app.buttons["action.findRecovery"].waitForExistence(timeout: 5), "Step 7: Find Recovery Options not found after closing Explain")
 
         // 8–10. Find Recovery Options, select the alternative site, preview it.
-        app.buttons["action.findRecovery"].tap()
+        tapWhenReady(app.buttons["action.findRecovery"], step: "Step 8")
         let optionB = element(app, "recovery.alternativeSite")
         XCTAssertTrue(optionB.waitForExistence(timeout: 5), "Step 8: option B card did not appear")
         XCTAssertTrue(element(app, "recovery.sameSiteLaterTime").exists, "Step 8: option A card missing")
-        optionB.tap()
+        tapWhenReady(optionB, step: "Step 9")
         XCTAssertTrue(element(app, "preview.tag").waitForExistence(timeout: 5), "Step 9: PREVIEW tag did not appear after selecting option B")
         let previewSite = element(app, "inspector.siteName")
         XCTAssertTrue(previewSite.label.contains("Demo Point A"), "Step 10: preview must not change the committed site: \(previewSite.label)")
@@ -74,7 +76,7 @@ final class DemoFlowUITests: XCTestCase {
         attachScreenshot(named: "03-mission-rescue")
 
         // 11–12. Apply to Demo Plan; updated plan confirmed.
-        apply.tap()
+        tapWhenReady(apply, step: "Step 11")
         let updated = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Updated Plan")).firstMatch
         XCTAssertTrue(updated.waitForExistence(timeout: 5), "Step 11: 'Updated Plan' banner did not appear")
         XCTAssertTrue(updated.label.contains("Visibility Requirements Met"), "Step 11 banner: \(updated.label)")
@@ -82,7 +84,7 @@ final class DemoFlowUITests: XCTestCase {
         XCTAssertTrue(appliedSite.label.contains("Ridge Site B"), "Step 12 site after apply: \(appliedSite.label)")
 
         // 13–14. Reset Demo restores the original mission completely.
-        app.buttons["toolbar.resetDemo"].tap()
+        tapWhenReady(app.buttons["toolbar.resetDemo"], step: "Step 13")
         XCTAssertTrue(app.buttons["action.simulateDelay"].waitForExistence(timeout: 5), "Step 13: Simulate Delay did not return after Reset")
         let resetSite = element(app, "inspector.siteName")
         XCTAssertTrue(resetSite.label.contains("Demo Point A"), "Step 13 site after reset: \(resetSite.label)")
@@ -93,6 +95,21 @@ final class DemoFlowUITests: XCTestCase {
         XCTAssertTrue(landingValue.contains("20 November 2026, 06:00 UTC"), "Step 14 landing time after reset: \(landingValue)")
         XCTAssertTrue(app.buttons["duration.24"].isSelected, "Step 14: 24 h duration is not selected after reset")
         XCTAssertFalse(element(app, "comparison.delayed").exists, "Step 14: delayed card still visible after reset")
+    }
+
+    /// Taps once the element can receive touches. A sheet that is still settling (or a button under the
+    /// iOS 27 glass navigation bar) can exist but not be hittable yet; waiting avoids a flaky "Failed to tap".
+    /// If it never becomes hittable, the tap goes to the element's centre, and the next assertion checks
+    /// that the tap really worked — no check is skipped.
+    @MainActor
+    private func tapWhenReady(_ element: XCUIElement, step: String, timeout: TimeInterval = 10) {
+        XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(step): \(element.identifier) not found")
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: element)
+        if XCTWaiter().wait(for: [hittable], timeout: timeout) == .completed {
+            element.tap()
+        } else {
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
     }
 
     @MainActor
